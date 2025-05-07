@@ -164,13 +164,13 @@ with col_table[0]:
     #Top 10 Artists
     st.header("Top 10 Artists")
     if selected_state == "All":
-        top_artists_df_spark = get_top_10_artists(dataframe=df_listen)
+        top_artists_df_spark = get_top_10_artists()
         if top_artists_df_spark is not None:
             top_artists_df_pandas = top_artists_df_spark.toPandas()
             st.table(top_artists_df_pandas)
 
     else:
-        top_artists_df_spark = get_top_10_artists(selected_state=selected_state, dataframe=df_listen)
+        top_artists_df_spark = get_top_10_artists(selected_state=selected_state)
         if top_artists_df_spark is not None:
             top_artists_df_pandas = top_artists_df_spark.toPandas()
             st.table(top_artists_df_pandas)
@@ -181,10 +181,10 @@ with col_table[2]:
     # --- Display Subscription Pie Chart ---
     # st.subheader("Subscription Type Distribution")
     if selected_state == "All":
-        subscription_chart = create_subscription_pie_chart(dataframe=df_listen)
+        subscription_chart = create_subscription_pie_chart(selected_state=None, free_color="#E7187C", paid_color="#5AE718")
         st.altair_chart(subscription_chart, use_container_width=True)
     else:
-        subscription_chart_state = create_subscription_pie_chart(selected_state=selected_state, dataframe=df_listen)
+        subscription_chart_state = create_subscription_pie_chart(selected_state=selected_state, free_color="#E7187C", paid_color="#5AE718")
         st.altair_chart(subscription_chart_state, use_container_width=True)
     
     st.header("What if I add more things here")
