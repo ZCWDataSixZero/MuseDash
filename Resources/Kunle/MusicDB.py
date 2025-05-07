@@ -24,7 +24,7 @@ def get_artist_state_listen( df: pyspark.sql.dataframe.DataFrame , artist: str) 
     df = df.groupBy('artist','state').agg(count('*').alias('listens')).where(col('artist') == artist).orderBy(desc('listens'))
     return df
 
-def get_arist_over_1000(df: pyspark.sql.dataframe.DataFrame, number_of_lis) -> list:
+def get_arist_over_1000(df: pyspark.sql.dataframe.DataFrame, number_of_lis: int) -> list:
     '''
     Takes in a pyspark dataframe and returns list of artists with at least a states number of listens
 
@@ -36,7 +36,7 @@ def get_arist_over_1000(df: pyspark.sql.dataframe.DataFrame, number_of_lis) -> l
         list: number of artists with at least the specified number of listens
 
     '''
-    df = df.groupBy('artist').agg(count('*').alias('listens')).filter(col('listens') >= number_of_lis)
+    df = df.groupBy('artist').agg(count('*').alias('listens')).filter(col('listens') >= number_of_lis).orderBy(desc('listens'))
     df_list = [data[0] for data in df.select('artist').collect()]
     return df_list
 
