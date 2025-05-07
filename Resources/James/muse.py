@@ -191,4 +191,4 @@ with col_table[2]:
 
 with col_table[1]:
     st.empty()
-    st.write('')
+    st.write('  ')
