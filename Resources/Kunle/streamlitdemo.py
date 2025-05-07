@@ -24,10 +24,14 @@ except Exception as e:
     print(f'Error loading data: {e}')
 
 
+# creating the dataframe of listens for specific artists
 b = MusicDB.get_artist_state_listen(df=df_listen, artist='Aerosmith')
 
+# filtering data to what is needed to make map
 c = MusicDB.map_prep_df(df=b)
 
+
+## creating the maps
 fig = go.Figure(data=go.Choropleth(
     locations=c.state, # Spatial coordinates
     z = c.listens, # Data to be color-coded
@@ -36,12 +40,14 @@ fig = go.Figure(data=go.Choropleth(
     colorbar_title = "listens",
 ))
 
+# adding context to the map
 fig.update_layout(
     title_text = '2011 US Agriculture Exports by State',
     geo_scope='usa', # limite map scope to USA
 )
 
-tab1, tab2 = st.tabs(["Streamlit theme (default)", "Plotly native theme"])
+#creating tabs
+tab1, tab2 = st.tabs(["Map", "2nd for giggles"])
 
 with tab1:
     st.plotly_chart(fig)
