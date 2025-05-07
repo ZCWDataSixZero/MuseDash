@@ -8,6 +8,7 @@ import streamlit as st
 
 
 
+
 ## Initialize the SparkSession
 # appName is the name of the application
 # getOrCreate() creates a new session or retrieves an existing one
@@ -76,8 +77,7 @@ df_listen.show(truncate=False)
 
 def get_top_10_artists(selected_state=None, dataframe=df_listen):
     """
-    Finds the top 10 artists, defaulting to the globally defined df_listen
-    if no dataframe is explicitly provided.
+    Finds the top 10 artists, ordered by play count.
 
     Args:
         dataframe: An optional PySpark DataFrame. Defaults to the globally defined df_listen.
@@ -101,7 +101,6 @@ def get_top_10_artists(selected_state=None, dataframe=df_listen):
                                    .select(col("artist"), col("count"))
 
     print(title + ":")
-    top_10_artists_df.show()
     return top_10_artists_df
 
 def create_subscription_pie_chart(selected_state=None, free_color='red', paid_color='green', dataframe=df_listen):
@@ -149,6 +148,12 @@ def create_subscription_pie_chart(selected_state=None, free_color='red', paid_co
     )
     return chart
 
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+local_css("style.css")
+
 #Streamlit Titling
 st.title("Muse Dash")
 # st.subheader("Testing")
@@ -161,18 +166,23 @@ selected_state = st.sidebar.selectbox("Filter by State (Optional):", ["All"] + a
 col_table = st.columns((5, 1, 5), gap='medium')
 
 with col_table[0]:
-    #Top 10 Artists
-    st.header("Top 10 Artists")
+    # Top 10 Artists
+    
     if selected_state == "All":
-        top_artists_df_spark = get_top_10_artists(dataframe=df_listen)
+        st.header("Top 10 National Artists")
+        top_artists_df_spark = get_top_10_artists()
         if top_artists_df_spark is not None:
             top_artists_df_pandas = top_artists_df_spark.toPandas()
+            # Add a 1-based index
+            top_artists_df_pandas.index = range(1, len(top_artists_df_pandas) + 1)
             st.table(top_artists_df_pandas)
-
     else:
-        top_artists_df_spark = get_top_10_artists(selected_state=selected_state, dataframe=df_listen)
+        st.header("Top 10 Artists in " + selected_state)
+        top_artists_df_spark = get_top_10_artists(selected_state=selected_state)
         if top_artists_df_spark is not None:
             top_artists_df_pandas = top_artists_df_spark.toPandas()
+            # Add a 1-based index
+            top_artists_df_pandas.index = range(1, len(top_artists_df_pandas) + 1)
             st.table(top_artists_df_pandas)
     
     st.header("What if I add more things here")
@@ -181,10 +191,10 @@ with col_table[2]:
     # --- Display Subscription Pie Chart ---
     # st.subheader("Subscription Type Distribution")
     if selected_state == "All":
-        subscription_chart = create_subscription_pie_chart(dataframe=df_listen)
+        subscription_chart = create_subscription_pie_chart(selected_state=None, free_color="#E7187C", paid_color="#5AE718")
         st.altair_chart(subscription_chart, use_container_width=True)
     else:
-        subscription_chart_state = create_subscription_pie_chart(selected_state=selected_state, dataframe=df_listen)
+        subscription_chart_state = create_subscription_pie_chart(selected_state=selected_state, free_color="#E7187C", paid_color="#5AE718")
         st.altair_chart(subscription_chart_state, use_container_width=True)
     
     st.header("What if I add more things here")
