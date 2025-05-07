@@ -11,9 +11,7 @@ def create_spark_session():
 
 def main():
     #pass
-    set_page_config()
-    st.title("📊 Listening Duration Dashboard")
-    st.write("My first app is now running!")
+    # set_page_config()
     listening_duration = load_data()
     if listening_duration is not None:
         update_subscription_status_and_visualize(listening_duration)
@@ -39,7 +37,7 @@ def load_data():
         listening_duration = spark.read.json(file_path)
 
         # st.write("### DataFrame Preview:")
-        st.dataframe(listening_duration.limit(5).toPandas())
+        # st.dataframe(listening_duration)
         return listening_duration
     except Exception as e:
         st.error(f"Error loading file: {e}")
@@ -75,9 +73,16 @@ def update_subscription_status_and_visualize(listening_duration):
             .withColumn("month", month(col("ts"))) \
             .withColumn("month_name", date_format(col("ts"), "MMMM"))
         
-        # Creating dropdown to filter by state
+        # Creating dropdown to filter by state in alphabetical order
         states = updated_listening_duration.select("state").distinct().rdd.flatMap(lambda x: x).collect()
-        selected_states = st.multiselect("Select State(s):", states, default=states)
+        states.sort()
+        selected_states = st.multiselect("Select State(s):", states, default=[])
+
+        #Update the tile based on selected states
+        if selected_states:
+            st.write(f"### How long are users listening in {', '.join(selected_states)}?")
+        else:
+            st.write("### How long are users listening in the USA?")
 
         # Filter data on selected states
         if selected_states:
@@ -92,13 +97,13 @@ def update_subscription_status_and_visualize(listening_duration):
         updated_listening_duration_pd = duration_grouped.toPandas()
 
         #create the line chart
-        st.write ("### Total Duration By Subscription Level:")
+
         line_fig = px.line(
             updated_listening_duration_pd,
             x="month_name",
             y="total_duration",
             color="level",
-            title="U",
+            # title="Paid users listen to 7 years worth of listening hours more than free",
             labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
         )
         st.plotly_chart(line_fig)
@@ -110,3 +115,4 @@ def update_subscription_status_and_visualize(listening_duration):
 
 if __name__ == '__main__':
     main()
+
