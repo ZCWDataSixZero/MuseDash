@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 import plotly.express as px
-import MusicDB
+import Resources.Kunle.MusicDB as MusicDB
 import plotly.graph_objects as go
 
 # fig = px.choropleth(locations=["CA", "TX", "NY",'AK'], locationmode="USA-states", color=[1,2,3,4], scope="usa")
