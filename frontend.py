@@ -41,7 +41,7 @@ with tab1:
         col_table = st.columns((5, 1, 5), gap='medium')
         # Sidebar
         st.sidebar.header("Select a State")
-        available_states = cleaned_listen.select("state").distinct().orderBy("state").rdd.flatMap(lambda x: x).collect()
+        available_states = engine.get_states_list(cleaned_listen)
         selected_state = st.sidebar.selectbox("Filter by State (Optional):", 
                                             ['Nationwide'] + available_states,
                                             )

@@ -88,6 +88,8 @@ def top_5(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
     df = df.orderBy(desc('listens')).limit(5)
     return df
 
+
+
 ############
 # angel
 ############
@@ -230,3 +232,24 @@ def fix_multiple_encoding(text):
     except UnicodeDecodeError:
         pass
     return original_text
+
+
+
+
+
+######
+# Group
+#####
+def get_states_list(df: pyspark.sql.dataframe.DataFrame) -> list:
+    '''
+    Takes in a pyspark dataframe and returns list of states
+
+    Args:
+        df (pyspark.sql.dataframe.DataFrame): dataframe
+
+    Returns:
+        list: list of stats in the dataframe
+
+    '''
+    states_list = df.select("state").distinct().orderBy("state").rdd.flatMap(lambda x: x).collect()
+    return states_list
