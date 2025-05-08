@@ -23,7 +23,7 @@ def get_artist_state_listen( df: pyspark.sql.dataframe.DataFrame , artist: str) 
     df = df.groupBy('artist','state').agg(count('*').alias('listens')).where(col('artist') == artist).orderBy(desc('listens'))
     return df
 
-def get_arist_over_1000(df: pyspark.sql.dataframe.DataFrame, number_of_lis: int) -> list:
+def get_artist_over(df: pyspark.sql.dataframe.DataFrame, number_of_lis: int) -> list:
     '''
     Takes in a pyspark dataframe and returns list of artists with at least a states number of listens
 
@@ -109,7 +109,7 @@ def get_user_list(df: pyspark.sql.dataframe.DataFrame, state: str) -> pd.core.fr
         )
      
             # Filter data on selected states
-    if state == 'All':
+    if state == 'Nationwide':
         updated_listening_duration
     else:
         updated_listening_duration = updated_listening_duration.filter(col("state").isin(state))
@@ -147,7 +147,7 @@ def get_top_10_artists(df: pyspark.sql.dataframe.DataFrame , state: str) -> pd.c
     #     print("Warning: df_listen is None. Ensure data loading was successful.")
     #     return None
 
-    if state == 'All':
+    if state == 'Nationwide':
         #title = "Top 10 National Artists"
         filtered_df = df
     else:
