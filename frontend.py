@@ -39,19 +39,24 @@ with tab1:
      with st.container():
 
         col_table = st.columns((5, 1, 5), gap='medium')
+        
         # Sidebar
         st.sidebar.header("Select a State")
         available_states = engine.get_states_list(cleaned_listen)
         selected_state = st.sidebar.selectbox("Filter by State (Optional):", 
                                             ['Nationwide'] + available_states,
                                             )
-        
+        # titles depending on state selected
         if selected_state == 'Nationwide':
             top_10_header = "Top 10 National Artists"
             pie_title = "National Subscription Type Distribution"
+            paid_title = 'Top Songs for Paid Users'
+            free_title = 'Top Songs for Free Users'
         else:
             top_10_header = f"Top 10 Artists in {selected_state}"
             pie_title = f"Subscription Type Distribution in {selected_state}"
+            paid_title = f'Top Songs for Paid Users in {selected_state}'
+            free_title = f'Top Songs for Free Users in {selected_state}'
 
 
         with col_table[0]:
@@ -83,7 +88,7 @@ with tab1:
             
 
         with col_table[2]:
-            # listen chart creation
+            # listen graph creation
             listen_duration = engine.get_user_list(df=cleaned_listen, state=selected_state)
 
             # Determine the title based on the selected state
@@ -92,7 +97,7 @@ with tab1:
             else:
                 chart_title = f"How long are users listening in {selected_state}?"
                 
-            #create the line chart
+            #create the line graph
             line_fig = px.line(
                 listen_duration,
                 x="month_name",
@@ -103,6 +108,37 @@ with tab1:
                     )
             st.plotly_chart(line_fig)
         
+        with col_table[2]:
+            # paid songs charts
+            st.subheader(paid_title)
+            paid_songs_df = engine.top_paid_songs(df=cleaned_listen, state=selected_state)
+
+            chart_paid_songs = alt.Chart(paid_songs_df).mark_bar().encode(
+                x=alt.X('count:Q', title='Count'),
+                y=alt.Y('song:N', sort='-x', title='Song'),
+                tooltip=['song', 'count']
+            ).properties(
+                width=700,
+                height=400
+            )
+            st.altair_chart(chart_paid_songs, use_container_width=True)            
+        
+        with col_table[0]:
+            # free songs chart
+            st.subheader(free_title)
+            free_songs_df = engine.top_free_songs(df=cleaned_listen, state=selected_state)
+            
+            chart_free_songs = alt.Chart(free_songs_df).mark_bar().encode(
+                x=alt.X('count:Q', title='Count'),
+                y=alt.Y('song:N', sort='-x', title='Song'),
+                tooltip=['song', 'count']
+            ).properties(
+                width=700,
+                height=400
+            )
+            st.altair_chart(chart_free_songs, use_container_width=True)
+
+
 
 with tab2:
     with st.container():
