@@ -91,7 +91,7 @@ def top_5(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
 ############
 # angel
 ############
-def get_user_list(df: pyspark.sql.dataframe.DataFrame, selected_states = None) -> pd.core.frame.DataFrame:
+def get_user_list(df: pyspark.sql.dataframe.DataFrame, state: str) -> pd.core.frame.DataFrame:
      
      # Find the paid users
     paid_users = (
@@ -109,10 +109,11 @@ def get_user_list(df: pyspark.sql.dataframe.DataFrame, selected_states = None) -
         )
      
             # Filter data on selected states
-    if selected_states:
-        updated_listening_duration = updated_listening_duration.filter(col("state").isin(selected_states))
-    else:
+    if state == 'All':
         updated_listening_duration
+    else:
+        updated_listening_duration = updated_listening_duration.filter(col("state").isin(state))
+    
     
     # Group by year, month, subscription, and month_name, then sum the durations
     duration_grouped = updated_listening_duration.groupBy("year", "month", "month_name", "subscription") \
@@ -130,7 +131,7 @@ def get_user_list(df: pyspark.sql.dataframe.DataFrame, selected_states = None) -
 # James
 ############
 
-def get_top_10_artists(df: pyspark.sql.dataframe.DataFrame , selected_state=None) -> pd.core.frame.DataFrame:
+def get_top_10_artists(df: pyspark.sql.dataframe.DataFrame , state: str) -> pd.core.frame.DataFrame:
     """
     Finds the top 10 artists, ordered by play count.
 
@@ -142,16 +143,18 @@ def get_top_10_artists(df: pyspark.sql.dataframe.DataFrame , selected_state=None
     Returns:
         A PySpark DataFrame containing the top 10 artists and their counts.
     """
-    if df is None:
-        print("Warning: df_listen is None. Ensure data loading was successful.")
-        return None
+    # if df is None:
+    #     print("Warning: df_listen is None. Ensure data loading was successful.")
+    #     return None
 
-    if selected_state:
-        title = f"Top 10 Artists in {selected_state}"
-        filtered_df = df.filter(col("state") == selected_state)
-    else:
-        title = "Top 10 National Artists"
+    if state == 'All':
+        #title = "Top 10 National Artists"
         filtered_df = df
+    else:
+        #title = f"Top 10 Artists in {selected_state}"
+        filtered_df = df.filter(col("state") == state)
+    
+        
 
     top_10_artists_df = filtered_df.groupBy("artist") \
                                    .agg(count("*").alias("count")) \
