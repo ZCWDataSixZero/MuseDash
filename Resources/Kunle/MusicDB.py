@@ -1,6 +1,6 @@
 import pandas as pd
 import pyspark
-from pyspark.sql.functions import countDistinct, count, col, avg, max, min, countDistinct, sum, round, desc, from_unixtime
+from pyspark.sql.functions import udf, countDistinct, count, col, avg, max, min, countDistinct, sum, round, desc, from_unixtime
 from pyspark.sql.types import StringType
 
 # class MusicDB():
