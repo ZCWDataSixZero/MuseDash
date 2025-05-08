@@ -1,7 +1,7 @@
 import pandas as pd
 import pyspark
-from pyspark.sql.functions import countDistinct, count, col, avg, max, min, countDistinct, sum, round, desc
-
+from pyspark.sql.functions import countDistinct, count, col, avg, max, min, countDistinct, sum, round, desc, from_unixtime
+from pyspark.sql.types import StringType
 
 # class MusicDB():
     
@@ -87,4 +87,37 @@ def map_prep_df(df: pyspark.sql.dataframe.DataFrame) -> pd.core.frame.DataFrame:
 
 def top_5(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFrame:
     df = df.orderBy(desc('listens')).limit(5)
+    return df
+
+def fix_multiple_encoding(text):
+    """Attempts to fix multiple layers of incorrect encoding."""
+    if text is None:
+        return None
+    original_text = text
+    try:
+        decoded_once = text.encode('latin-1').decode('utf-8', errors='replace')
+        if decoded_once != original_text and '?' not in decoded_once:
+            decoded_twice = decoded_once.encode('latin-1').decode('utf-8', errors='replace')
+            if decoded_twice != decoded_once and '?' not in decoded_twice:
+                return decoded_twice
+            return decoded_once
+    except UnicodeEncodeError:
+        pass
+    except UnicodeDecodeError:
+        pass
+    return original_text
+
+def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFrame:
+    fix_encoding_udf = udf(fix_multiple_encoding, StringType())
+    df = df.withColumn("artist", fix_encoding_udf(col("artist"))) \
+                         .withColumn("song", fix_encoding_udf(col("song")))
+    
+    df = df.selectExpr('userId', 'lastName', 'firstName', 'gender', 'song', 'artist', \
+                  'duration', 'sessionId', 'itemInSession', 'auth', 'level as subcription',\
+                      'city', 'state', 'zip', 'lat', 'lon', 'registration', 'userAgent', 'ts')
+
+    df = df.withColumn("ts_seconds", col("ts") / 1000)
+    readable_ts = from_unixtime(col("ts_seconds"), "yyyy-MM-dd HH:mm:ss")
+    df = df.withColumn("ts", readable_ts).drop("ts_seconds")
+
     return df
