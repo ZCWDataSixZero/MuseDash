@@ -1,7 +1,7 @@
 import pandas as pd
 import pyspark
-from pyspark.sql.functions import countDistinct, count, col, avg, max, min, countDistinct, sum, round, desc
-
+from pyspark.sql.functions import to_timestamp, year, month, date_format, udf, countDistinct, count, col, avg, max, min, countDistinct, sum, round, desc, from_unixtime
+from pyspark.sql.types import StringType
 
 # class MusicDB():
     
@@ -24,7 +24,7 @@ def get_artist_state_listen( df: pyspark.sql.dataframe.DataFrame , artist: str) 
     df = df.groupBy('artist','state').agg(count('*').alias('listens')).where(col('artist') == artist).orderBy(desc('listens'))
     return df
 
-def get_arist_over_1000(df: pyspark.sql.dataframe.DataFrame, number_of_lis) -> list:
+def get_arist_over_1000(df: pyspark.sql.dataframe.DataFrame, number_of_lis: int) -> list:
     '''
     Takes in a pyspark dataframe and returns list of artists with at least a states number of listens
 
@@ -36,7 +36,7 @@ def get_arist_over_1000(df: pyspark.sql.dataframe.DataFrame, number_of_lis) -> l
         list: number of artists with at least the specified number of listens
 
     '''
-    df = df.groupBy('artist').agg(count('*').alias('listens')).filter(col('listens') >= number_of_lis)
+    df = df.groupBy('artist').agg(count('*').alias('listens')).filter(col('listens') >= number_of_lis).orderBy(desc('listens'))
     df_list = [data[0] for data in df.select('artist').collect()]
     return df_list
 
@@ -87,4 +87,38 @@ def map_prep_df(df: pyspark.sql.dataframe.DataFrame) -> pd.core.frame.DataFrame:
 
 def top_5(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFrame:
     df = df.orderBy(desc('listens')).limit(5)
+    return df
+
+def fix_multiple_encoding(text):
+    """Attempts to fix multiple layers of incorrect encoding."""
+    if text is None:
+        return None
+    original_text = text
+    try:
+        decoded_once = text.encode('latin-1').decode('utf-8', errors='replace')
+        if decoded_once != original_text and '?' not in decoded_once:
+            decoded_twice = decoded_once.encode('latin-1').decode('utf-8', errors='replace')
+            if decoded_twice != decoded_once and '?' not in decoded_twice:
+                return decoded_twice
+            return decoded_once
+    except UnicodeEncodeError:
+        pass
+    except UnicodeDecodeError:
+        pass
+    return original_text
+
+def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFrame:
+    fix_encoding_udf = udf(fix_multiple_encoding, StringType())
+    df = df.withColumn("artist", fix_encoding_udf(col("artist"))) \
+                         .withColumn("song", fix_encoding_udf(col("song")))
+    
+    df = df.selectExpr('userId', 'lastName', 'firstName', 'gender', 'song', 'artist', \
+                  'duration', 'sessionId', 'itemInSession', 'auth', 'level as subcription',\
+                      'city', 'state', 'zip', 'lat', 'lon', 'registration', 'userAgent', 'ts')
+
+    df = df.withColumnwithColumn("ts", to_timestamp(col("ts").cast("long") / 1000))
+    df = df.withColumn("year", year(col("ts"))) \
+            .withColumn("month", month(col("ts"))) \
+            .withColumn("month_name", date_format(col("ts"), "MMMM"))
+
     return df
