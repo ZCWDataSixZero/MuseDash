@@ -1,6 +1,6 @@
 import pandas as pd
 import pyspark
-from pyspark.sql.functions import to_timestamp, year, month, date_format, udf, countDistinct, count, col, avg, max, min, countDistinct, sum, round, desc, from_unixtime
+from pyspark.sql.functions import desc, asc, count, col, when, to_timestamp, year, month, date_format, sum, when, udf, from_unixtime
 from pyspark.sql.types import StringType
 
 
@@ -130,7 +130,7 @@ def get_user_list(df: pyspark.sql.dataframe.DataFrame, selected_states = None) -
 # James
 ############
 
-def get_top_10_artists(dataframe: pyspark.sql.dataframe.DataFrame , selected_state=None) -> pd.core.frame.DataFrame:
+def get_top_10_artists(df: pyspark.sql.dataframe.DataFrame , selected_state=None) -> pd.core.frame.DataFrame:
     """
     Finds the top 10 artists, ordered by play count.
 
@@ -142,22 +142,21 @@ def get_top_10_artists(dataframe: pyspark.sql.dataframe.DataFrame , selected_sta
     Returns:
         A PySpark DataFrame containing the top 10 artists and their counts.
     """
-    if dataframe is None:
+    if df is None:
         print("Warning: df_listen is None. Ensure data loading was successful.")
         return None
 
     if selected_state:
         title = f"Top 10 Artists in {selected_state}"
-        filtered_df = dataframe.filter(col("state") == selected_state)
+        filtered_df = df.filter(col("state") == selected_state)
     else:
         title = "Top 10 National Artists"
-        filtered_df = dataframe
+        filtered_df = df
 
     top_10_artists_df = filtered_df.groupBy("artist") \
                                    .agg(count("*").alias("count")) \
                                    .orderBy(desc("count")) \
-                                   .limit(10) \
-                                   .select(col("artist"), col("count"))
+                                   .limit(10) 
 
     #print(title + ":")
     return top_10_artists_df.toPandas()

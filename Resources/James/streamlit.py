@@ -4,6 +4,7 @@ import altair as alt
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf, col, from_unixtime, count, desc
 from pyspark.sql.types import StringType
+
 from muse import get_top_10_artists, create_subscription_pie_chart
 
 def local_css(file_name):
