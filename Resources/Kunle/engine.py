@@ -113,10 +113,10 @@ def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
                          .withColumn("song", fix_encoding_udf(col("song")))
     
     df = df.selectExpr('userId', 'lastName', 'firstName', 'gender', 'song', 'artist', \
-                  'duration', 'sessionId', 'itemInSession', 'auth', 'level as subcription',\
+                  'duration', 'sessionId', 'itemInSession', 'auth', 'level as subscription',\
                       'city', 'state', 'zip', 'lat', 'lon', 'registration', 'userAgent', 'ts')
 
-    df = df.withColumnwithColumn("ts", to_timestamp(col("ts").cast("long") / 1000))
+    df = df.withColumn("ts", to_timestamp(col("ts").cast("long") / 1000))
     df = df.withColumn("year", year(col("ts"))) \
             .withColumn("month", month(col("ts"))) \
             .withColumn("month_name", date_format(col("ts"), "MMMM"))
