@@ -3,7 +3,8 @@ import pyspark
 import plotly.express as px
 import streamlit as st
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, when, to_timestamp, year, month, date_format, sum, when
+from pyspark.sql.types import StringType
+from pyspark.sql.functions import col, when, to_timestamp, year, month, date_format, sum, when, udf, from_unixtime
 
 def get_user_list(df: pyspark.sql.dataframe.DataFrame, selected_states = None) -> pd.core.frame.DataFrame:
      
@@ -29,13 +30,45 @@ def get_user_list(df: pyspark.sql.dataframe.DataFrame, selected_states = None) -
         updated_listening_duration
     
     # Group by year, month, subscription, and month_name, then sum the durations
-    duration_grouped = updated_listening_duration.groupBy("year", "month", "month_name", "level") \
+    duration_grouped = updated_listening_duration.groupBy("year", "month", "month_name", "subscription") \
             .agg(sum("duration").alias("total_duration")) \
-            .orderBy("year", "month", "level")
+            .orderBy("year", "month", "subscription")
     
     #convert to a pandas dataframe
     updated_listening_duration_pd = duration_grouped.toPandas()
 
     return updated_listening_duration_pd
 
+def fix_multiple_encoding(text):
+    """Attempts to fix multiple layers of incorrect encoding."""
+    if text is None:
+        return None
+    original_text = text
+    try:
+        decoded_once = text.encode('latin-1').decode('utf-8', errors='replace')
+        if decoded_once != original_text and '?' not in decoded_once:
+            decoded_twice = decoded_once.encode('latin-1').decode('utf-8', errors='replace')
+            if decoded_twice != decoded_once and '?' not in decoded_twice:
+                return decoded_twice
+            return decoded_once
+    except UnicodeEncodeError:
+        pass
+    except UnicodeDecodeError:
+        pass
+    return original_text
+
+def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFrame:
+    fix_encoding_udf = udf(fix_multiple_encoding, StringType())
+    df = df.withColumn("artist", fix_encoding_udf(col("artist"))) \
+                         .withColumn("song", fix_encoding_udf(col("song")))
     
+    df = df.selectExpr('userId', 'lastName', 'firstName', 'gender', 'song', 'artist', \
+                  'duration', 'sessionId', 'itemInSession', 'auth', 'level as subscription',\
+                      'city', 'state', 'zip', 'lat', 'lon', 'registration', 'userAgent', 'ts')
+
+    df = df.withColumn("ts", to_timestamp(col("ts").cast("long") / 1000))
+    df = df.withColumn("year", year(col("ts"))) \
+            .withColumn("month", month(col("ts"))) \
+            .withColumn("month_name", date_format(col("ts"), "MMMM"))
+
+    return df
