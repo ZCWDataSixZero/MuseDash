@@ -1,6 +1,6 @@
 import pandas as pd
 import pyspark
-from pyspark.sql.functions import udf, countDistinct, count, col, avg, max, min, countDistinct, sum, round, desc, from_unixtime
+from pyspark.sql.functions import to_timestamp, year, month, date_format, udf, countDistinct, count, col, avg, max, min, countDistinct, sum, round, desc, from_unixtime
 from pyspark.sql.types import StringType
 
 # class MusicDB():
@@ -116,8 +116,9 @@ def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
                   'duration', 'sessionId', 'itemInSession', 'auth', 'level as subcription',\
                       'city', 'state', 'zip', 'lat', 'lon', 'registration', 'userAgent', 'ts')
 
-    df = df.withColumn("ts_seconds", col("ts") / 1000)
-    readable_ts = from_unixtime(col("ts_seconds"), "yyyy-MM-dd HH:mm:ss")
-    df = df.withColumn("ts", readable_ts).drop("ts_seconds")
+    df = df.withColumnwithColumn("ts", to_timestamp(col("ts").cast("long") / 1000))
+    df = df.withColumn("year", year(col("ts"))) \
+            .withColumn("month", month(col("ts"))) \
+            .withColumn("month_name", date_format(col("ts"), "MMMM"))
 
     return df
