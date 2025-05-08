@@ -1,5 +1,5 @@
 import pyspark
-from pyspark.sql.functions import SparkSession
+# from pyspark.sql.functions import SparkSession
 import os
 from pyspark.sql.functions import col, count, desc
 import matplotlib.pyplot as plt
@@ -24,7 +24,7 @@ def top_paid_artists(df: pyspark.sql.DataFrame, paid_status: str) -> pyspark.sql
     artist_counts = paid_df.groupBy('artist').agg(count('*').alias('count')).orderBy(col('count').desc())
 
     # Limit to top 5 artists and collect results
-    top_artists = artist_counts.limit(5).collect()
+    top_artists = artist_counts.limit(5)
 
 
     return top_artists
@@ -92,7 +92,6 @@ def top_paid_songs(df: pyspark.sql.DataFrame, paid_status: str) -> pyspark.sql.D
         filtered and aggregated dataframe 
 
     """
-
 
     # Filter for paid users
     paid_df = df.filter(col('subscription') == 'paid')
