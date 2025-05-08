@@ -35,14 +35,20 @@ available_states = a.select("state").distinct().orderBy("state").rdd.flatMap(lam
 selected_state = st.sidebar.selectbox("Filter by State (Optional):", ["All"] + available_states)
 
 b = angelmethod.get_user_list(df=a, selected_states=selected_state)
-#create the line chart
 
+# Determine the title based on the selected state
+if selected_state == "All":
+    chart_title = "How long are users listening in the USA?"
+else:
+    chart_title = f"How long are users listening in {selected_state}?"
+
+#create the line chart
 line_fig = px.line(
     b,
     x="month_name",
     y="total_duration",
     color="subscription",
-    # title="Paid users listen to 7 years worth of listening hours more than free",
+    title=chart_title,
     labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
         )
 st.plotly_chart(line_fig)
