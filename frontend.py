@@ -45,15 +45,42 @@ with tab1:
         selected_state = st.sidebar.selectbox("Filter by State (Optional):", 
                                             ['Nationwide'] + available_states,
                                             )
+        
+        if selected_state == 'Nationwide':
+            top_10_header = "Top 10 National Artists"
+            pie_title = "National Subscription Type Distribution"
+        else:
+            top_10_header = f"Top 10 Artists in {selected_state}"
+            pie_title = f"Subscription Type Distribution in {selected_state}"
+
+
         with col_table[0]:
             # printing top ten chart
             top_10 = engine.get_top_10_artists(df=cleaned_listen, state=selected_state)
-            if selected_state == 'Nationwide':
-                st.header("Top 10 National Artists")
-            else:
-                st.header(f"Top 10 Artists in {selected_state}")
-            st.table(top_10)
+            st.header(top_10_header)
+            st.dataframe(top_10, hide_index=True)
 
+        
+        with col_table[0]:
+            # printing pie
+            pie_df = engine.create_subscription_pie_chart(df=cleaned_listen, state=selected_state)
+
+
+            chart = alt.Chart(pie_df).mark_arc().encode(
+            theta=alt.Theta(field="count", type="quantitative"),
+            color=alt.Color(field="subscription", type="nominal",
+                            scale=alt.Scale(domain=['free', 'paid'],
+                                            range=['red', 'green']),
+                            legend=alt.Legend(title="Subscription Type", orient="bottom")),
+            order=alt.Order(field="count", sort="descending"),
+            tooltip=["subscription", "count"]
+        ).properties(
+            title=pie_title
+        ).configure_view(
+            fillOpacity=0  # Make the chart background transparent
+        )
+            st.altair_chart(chart)
+            
 
         with col_table[2]:
             # listen chart creation
@@ -75,6 +102,7 @@ with tab1:
                 labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
                     )
             st.plotly_chart(line_fig)
+        
 
 with tab2:
     with st.container():
