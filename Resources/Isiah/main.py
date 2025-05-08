@@ -1,11 +1,12 @@
 import matplotlib.pyplot as plt
 from pyspark.sql import SparkSession
-from prep import top_paid_artists
+from prep import top_paid_artists, top_free_artists, top_free_songs, top_paid_songs
 import prep
 import streamlit as st
 from pyspark.sql.functions import udf, col
 from pyspark.sql.types import StringType
 import pandas as pd
+import altair as alt
 
 
 
@@ -31,7 +32,7 @@ def fix_multiple_encoding(text):
         pass
     return original_text
 
-file_path = '/Users/isiah/Projects/P1/MuseDash/Resources/Isiah/Data'
+file_path = '/Users/isiah/Downloads/Data/listen_events'
 df_listen = None
 
 try:
@@ -68,16 +69,28 @@ paid_artists = prep.top_paid_artists(df=df_listen, paid_status='paid')
 
 st.title("Top Artists For Paid Users")
 
-# Create horizontal bar chart
+# Create horizontal bar chart using Altair
 if paid_artists:
     st.subheader("Horizontal Bar Chart of Top Artists of Paid Users")
-    # Convert to Pandas DataFrame for Streamlit
+    # Convert to Pandas DataFrame for Altair
     paid_artists_df = paid_artists.toPandas()
-    paid_artists_df = paid_artists_df.sort_values(by='count', ascending=False)
-    st.bar_chart(paid_artists_df.set_index('artist')['count'], use_container_width=True)
+    paid_artists_df = paid_artists_df.sort_values(by='count', ascending=True)
+
+    # Create Altair chart
+    chart = alt.Chart(paid_artists_df).mark_bar().encode(
+        x=alt.X('count:Q', title='Count'),
+        y=alt.Y('artist:N', sort='-x', title='Artist'),
+        tooltip=['artist', 'count']
+    ).properties(
+        width=700,  # Adjust width as needed
+        height=400  # Adjust height as needed
+    )
+
+    # Display the chart in Streamlit
+    st.altair_chart(chart, use_container_width=True)
 else:
     st.write("No data available for paid users.")
 
-    
+
 
 

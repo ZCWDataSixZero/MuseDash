@@ -50,7 +50,7 @@ def top_free_artists(df: pyspark.sql.DataFrame, free_status: str) -> pyspark.sql
     free_artist_counts = free_df.groupBy('artist').agg(count('*').alias('count')).orderBy(col('count').desc())
 
     # Limit to top 5 artists and collect results
-    top_artists = free_artist_counts.limit(5).collect()
+    top_artists = free_artist_counts.limit(5)
 
     return top_artists
 
