@@ -54,42 +54,84 @@ except Exception as e:
 
 
 
-# spark = SparkSession.builder.appName("Musedash Streamlit").getOrCreate()
-
-# try:
-#     df_listen = spark.read.json ('./Data/listen_events')
-#     print('Data loaded successfully')
-# except Exception as e:
-#     print(f'Error loading data: {e}')
-
-
-# get artists
-
+# Display top paid artists
 paid_artists = prep.top_paid_artists(df=df_listen, paid_status='paid')
+st.title("Top Artists and Songs Analysis")
 
-st.title("Top Artists For Paid Users")
-
-# Create horizontal bar chart using Altair
+# Top Paid Artists
 if paid_artists:
-    st.subheader("Horizontal Bar Chart of Top Artists of Paid Users")
-    # Convert to Pandas DataFrame for Altair
+    st.subheader("Horizontal Bar Chart of Top Artists for Paid Users")
     paid_artists_df = paid_artists.toPandas()
     paid_artists_df = paid_artists_df.sort_values(by='count', ascending=True)
 
-    # Create Altair chart
-    chart = alt.Chart(paid_artists_df).mark_bar().encode(
+    chart_paid_artists = alt.Chart(paid_artists_df).mark_bar().encode(
         x=alt.X('count:Q', title='Count'),
         y=alt.Y('artist:N', sort='-x', title='Artist'),
-        tooltip=['artist', 'count']
+        tooltip=['artist', 'Views']
     ).properties(
-        width=700,  # Adjust width as needed
-        height=400  # Adjust height as needed
+        width=700,
+        height=400
     )
-
-    # Display the chart in Streamlit
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart_paid_artists, use_container_width=True)
 else:
     st.write("No data available for paid users.")
+
+# Top Free Artists
+free_artists = prep.top_free_artists(df=df_listen, free_status='free')
+if free_artists:
+    st.subheader("Horizontal Bar Chart of Top Artists for Free Users")
+    free_artists_df = free_artists.toPandas()
+    free_artists_df = free_artists_df.sort_values(by='count', ascending=True)
+
+    chart_free_artists = alt.Chart(free_artists_df).mark_bar().encode(
+        x=alt.X('count:Q', title='Count'),
+        y=alt.Y('artist:N', sort='-x', title='Artist'),
+        tooltip=['artist', 'Views']
+    ).properties(
+        width=700,
+        height=400
+    )
+    st.altair_chart(chart_free_artists, use_container_width=True)
+else:
+    st.write("No data available for free users.")
+
+# Top Paid Songs
+paid_songs = prep.top_paid_songs(df=df_listen, paid_status='paid')
+if paid_songs:
+    st.subheader("Horizontal Bar Chart of Top Songs for Paid Users")
+    paid_songs_df = paid_songs.toPandas()
+    paid_songs_df = paid_songs_df.sort_values(by='count', ascending=True)
+
+    chart_paid_songs = alt.Chart(paid_songs_df).mark_bar().encode(
+        x=alt.X('count:Q', title='Count'),
+        y=alt.Y('song:N', sort='-x', title='Song'),
+        tooltip=['song', 'Listens']
+    ).properties(
+        width=700,
+        height=400
+    )
+    st.altair_chart(chart_paid_songs, use_container_width=True)
+else:
+    st.write("No data available for paid songs.")
+
+# Top Free Songs
+free_songs = prep.top_free_songs(df=df_listen, free_status='free')
+if free_songs:
+    st.subheader("Horizontal Bar Chart of Top Songs for Free Users")
+    free_songs_df = free_songs.toPandas()
+    free_songs_df = free_songs_df.sort_values(by='count', ascending=True)
+
+    chart_free_songs = alt.Chart(free_songs_df).mark_bar().encode(
+        x=alt.X('count:Q', title='Count'),
+        y=alt.Y('song:N', sort='-x', title='Song'),
+        tooltip=['song', 'count']
+    ).properties(
+        width=700,
+        height=400
+    )
+    st.altair_chart(chart_free_songs, use_container_width=True)
+else:
+    st.write("No data available for free songs.")
 
 
 
