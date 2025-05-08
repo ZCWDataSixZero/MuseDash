@@ -164,6 +164,38 @@ def get_top_10_artists(df: pyspark.sql.dataframe.DataFrame , state: str) -> pd.c
     #print(title + ":")
     return top_10_artists_df.toPandas()
 
+def create_subscription_pie_chart(df: pyspark.sql.dataframe.DataFrame , state: str) -> pd.core.frame.DataFrame:
+    """
+    Generates an Altair pie chart showing the distribution of free vs. paid
+    subscriptions. Defaults to the national distribution using the provided dataframe.
+
+    Args:
+        dataframe: A PySpark DataFrame.
+        selected_state: An optional string representing the state to filter by.
+                        If None (default), it aggregates across all states.
+        free_color: The color to use for 'free' subscriptions (default: 'red').
+        paid_color: The color to use for 'paid' subscriptions (default: 'green').
+
+    Returns:
+        An Altair chart object.
+    """
+    # if df is None:
+    #     print("Warning: df_listen is None. Ensure data loading was successful.")
+    #     return None
+
+    if state == 'Nationwide':
+        #title = "National Subscription Type Distribution"
+        filtered_df = df
+    else:
+        #title = f"Subscription Type Distribution in {selected_state}"
+        filtered_df = df.filter(col("state") == state)
+    
+    free_vs_paid_df_spark = filtered_df.groupBy("subscription") \
+                                .agg(count("*").alias("count")) \
+                                .orderBy(desc("count")) 
+
+    return free_vs_paid_df_spark.toPandas()
+
 
 def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFrame:
     fix_encoding_udf = udf(fix_multiple_encoding, StringType())
