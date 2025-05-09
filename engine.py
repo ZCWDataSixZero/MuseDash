@@ -268,16 +268,14 @@ def top_free_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataF
     free_df = df.filter(col('subscription') == 'free')
 
     # Group by song, count the occurrences, and sort in descending order
-    song_counts = free_df.groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc())
 
 
     # Limit to top 5 songs and collect results
     if state == 'Nationwide':
-        top_songs = song_counts.limit(5)
+        top_songs = free_df.groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc()).limit(5)
     else:
-        song_counts_state = paid_df.select('userId', 'artist', 'song', 'subscription', 'city', 'state').\
-            groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc())
-        top_songs = song_counts_state.filter(col("state") == state).limit(5)
+         top_songs = free_df.groupBy('state','song').agg(count('*').alias('count'))\
+            .orderBy(col('count').desc()).filter(col('state')== state).limit(5)
 
     top_songs_pd = top_songs.toPandas().sort_values(by='count', ascending=True)
     
@@ -301,15 +299,14 @@ def top_paid_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataF
     paid_df = df.filter(col('subscription') == 'paid')
 
     # Group by song, count the occurrences, and sort in descending order
-    song_counts = paid_df.groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc())
+    
 
      # Limit to top 5 songs and collect results
     if state == 'Nationwide':
-        top_songs = song_counts.limit(5)
+         top_songs = paid_df.groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc()).limit(5)
     else:
-        song_counts_state = paid_df.select('userId', 'artist', 'song', 'subscription', 'city', 'state').\
-            groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc())
-        top_songs = song_counts_state.filter(col("state") == state).limit(5)
+        top_songs = paid_df.groupBy('state','song').agg(count('*').alias('count')) \
+            .orderBy(col('count').desc()).filter(col('state')== state).limit(5)
 
     top_songs_pd = top_songs.toPandas().sort_values(by='count', ascending=True)
     
