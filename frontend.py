@@ -15,7 +15,7 @@ spark = SparkSession.builder \
 ## Verify that SparkSession is created
 
 try:
-    df_listen = spark.read.json ('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
+    df_listen = spark.read.json ('/Users/jim/Projects/p1/spring25data/Data/listen_events')
     print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
@@ -26,6 +26,13 @@ artist_list = engine.get_artist_over(df=df_listen,number_of_lis=1000)
 
 # makes page wide
 st.set_page_config(layout = 'wide')
+
+# allow .css formating
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+local_css("style.css")
                    
 # Streamlit Titling
 st.title("Muse Dash")
