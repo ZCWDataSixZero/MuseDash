@@ -23,9 +23,8 @@ try:
 except Exception as e:
     print(f'Error loading data: {e}')
 
+
 a = angelmethod.clean(df=df_listen)
-
-
 
 
 
@@ -35,6 +34,10 @@ available_states = a.select("state").distinct().orderBy("state").rdd.flatMap(lam
 selected_state = st.sidebar.selectbox("Filter by State (Optional):", ["All"] + available_states)
 
 b = angelmethod.get_user_list(df=a, selected_states=selected_state)
+
+
+
+
 
 # Determine the title based on the selected state
 if selected_state == "All":
@@ -51,4 +54,9 @@ line_fig = px.line(
     title=chart_title,
     labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
         )
+line_fig.update_traces(
+    hovertemplate = "<b>Month</b>: %{data.name}" 
+                    "<b>Subscription</b>: %{data.name}" +
+                    "<b>Total Duration</b>: %{y} seconds<extra></extra>"
+)
 st.plotly_chart(line_fig)
