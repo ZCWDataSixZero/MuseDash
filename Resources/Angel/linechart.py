@@ -78,6 +78,7 @@ line_fig.update_traces(
     selector={'name': 'free'},
     hovertemplate='<span style="font-size: 18px;">' +
                   'Free: %{y:.2f}' +
-                  '<extra></extra>'
+                  '<extra></extra>',
+  
 )
 st.plotly_chart(line_fig)
