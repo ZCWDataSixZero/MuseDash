@@ -54,9 +54,13 @@ line_fig = px.line(
     title=chart_title,
     labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
         )
+
+
 line_fig.update_traces(
-    hovertemplate = "<b>Month</b>: %{data.name}" 
-                    "<b>Subscription</b>: %{data.name}" +
-                    "<b>Total Duration</b>: %{y} seconds<extra></extra>"
+    hovertemplate = f'<span style="font-size: 14px;">' +
+                    "<b>%{x}</b><br>" +
+                    "%{y} seconds" +
+                    '</span><extra></extra>'
+    
 )
 st.plotly_chart(line_fig)
