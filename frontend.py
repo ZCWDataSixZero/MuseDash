@@ -73,23 +73,96 @@ with st.container():
         pie_df = engine.create_subscription_pie_chart(df=cleaned_listen, state=selected_state)
 
 
-        chart = alt.Chart(pie_df).mark_arc().encode(
-        theta=alt.Theta(field="count", type="quantitative"),
-        color=alt.Color(field="subscription", type="nominal",
-                        scale=alt.Scale(domain=['free', 'paid'],
-                                        range=['orange', 'blue']),
-                        legend=alt.Legend(title="Subscription Type", orient="bottom")),
-        order=alt.Order(field="count", sort="descending"),
-        tooltip=["subscription", "count"]
-    ).properties(
-        title=pie_title
-    ).configure_view(
-        fillOpacity=0  # Make the chart background transparent
-    )
-        st.altair_chart(chart)
+            chart = alt.Chart(pie_df).mark_arc().encode(
+            theta=alt.Theta(field="count", type="quantitative"),
+            color=alt.Color(field="subscription", type="nominal",
+                            scale=alt.Scale(domain=['free', 'paid'],
+                                            range=['red', 'green']),
+                            legend=alt.Legend(title="Subscription Type", orient="bottom")),
+            order=alt.Order(field="count", sort="descending"),
+            tooltip=["subscription", "count"]
+        ).properties(
+            title=pie_title
+        ).configure_view(
+            fillOpacity=0  # Make the chart background transparent
+        )
+            st.altair_chart(chart)
+            
+
+        with col_table[2]:
+            # listen graph creation
+            listen_duration = engine.get_user_list(df=cleaned_listen, state=selected_state)
+
+            # Determine the title based on the selected state
+            if selected_state == "Nationwide":
+                chart_title = "How long are users listening in the USA?"
+            else:
+                chart_title = f"How long are users listening in {selected_state}?"
+                
+            #create the line graph
+            line_fig = px.line(
+                listen_duration,
+                x="month_name",
+                y="total_duration",
+                color="subscription",
+                title=chart_title,
+                labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
+                    )
+            line_fig.update_layout(hovermode="x unified")
+
+            # Update hovertemplate for the 'Paid' trace
+            line_fig.update_traces(
+                selector={'name': 'paid'},
+                hovertemplate='<span style="font-size: 18px;">' +
+                            'Paid: %{y:.2f}' +
+                            '<extra></extra>'
+            )
+
+            # Update hovertemplate for the 'Free' trace
+            line_fig.update_traces(
+                selector={'name': 'free'},
+                hovertemplate='<span style="font-size: 18px;">' +
+                            'Free: %{y:.2f}' +
+                            '<extra></extra>',
+  
+)
+
+            st.plotly_chart(line_fig)
         
-    with col_table[1]:
-        with st.container():
+        with col_table[2]:
+            # paid songs charts
+            st.subheader(paid_title)
+            paid_songs_df = engine.top_paid_songs(df=cleaned_listen, state=selected_state)
+
+            chart_paid_songs = alt.Chart(paid_songs_df).mark_bar().encode(
+                x=alt.X('count:Q', title='Count'),
+                y=alt.Y('song:N', sort='-x', title='Song'),
+                tooltip=['song', 'count']
+            ).properties(
+                width=700,
+                height=400
+            )
+            st.altair_chart(chart_paid_songs, use_container_width=True)            
+        
+        with col_table[0]:
+            # free songs chart
+            st.subheader(free_title)
+            free_songs_df = engine.top_free_songs(df=cleaned_listen, state=selected_state)
+            
+            chart_free_songs = alt.Chart(free_songs_df).mark_bar().encode(
+                x=alt.X('count:Q', title='Count'),
+                y=alt.Y('song:N', sort='-x', title='Song'),
+                tooltip=['song', 'count']
+            ).properties(
+                width=700,
+                height=400
+            )
+            st.altair_chart(chart_free_songs, use_container_width=True)
+
+
+
+with tab2:
+    with st.container():
 
             # st.sidebar.header("Select an Artist")
             option = st.selectbox(
