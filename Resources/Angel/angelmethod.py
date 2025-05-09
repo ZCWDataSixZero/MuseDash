@@ -5,6 +5,7 @@ import streamlit as st
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import col, when, to_timestamp, year, month, date_format, sum, avg, when, udf, from_unixtime, countDistinct
+import engine
 
 
 # def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
@@ -19,7 +20,8 @@ from pyspark.sql.functions import col, when, to_timestamp, year, month, date_for
 #     """
 #     total_users = df.select(col("userId")).distinct().count()
 #     average_listening_time = df.select(avg("duration")).collect()[0][0]
-#     return total_users, average_listening_time
+#     total_duration_sum = df.filter(df["subscription"] == "paid").agg(sum("duration")).collect()[0][0]
+#     return total_users, average_listening_time, total_duration_sum
 
 
 def get_user_list(df: pyspark.sql.dataframe.DataFrame, selected_states = None) -> pd.core.frame.DataFrame:
