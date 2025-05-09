@@ -36,6 +36,11 @@ selected_state = st.sidebar.selectbox("Filter by State (Optional):", ["All"] + a
 b = angelmethod.get_user_list(df=a, selected_states=selected_state)
 
 
+#Mock KPIs until I can get the real thing working
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Users", "1k+", "500")
+col2.metric("Average Listening Hours", "9 hours", "-2%")
+col3.metric("Average Songs per Session", "7", "3")
 
 
 
