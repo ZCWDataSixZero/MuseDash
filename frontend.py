@@ -121,9 +121,9 @@ with tab1:
             paid_songs_df = engine.top_paid_songs(df=cleaned_listen, state=selected_state)
 
             chart_paid_songs = alt.Chart(paid_songs_df).mark_bar().encode(
-                x=alt.X('count:Q', title='Count'),
+                x=alt.X('count:Q', title='listens'),
                 y=alt.Y('song:N', sort='-x', title='Song'),
-                tooltip=['song', 'count']
+                tooltip=['song', 'listens']
             ).properties(
                 width=700,
                 height=400
@@ -136,9 +136,9 @@ with tab1:
             free_songs_df = engine.top_free_songs(df=cleaned_listen, state=selected_state)
             
             chart_free_songs = alt.Chart(free_songs_df).mark_bar().encode(
-                x=alt.X('count:Q', title='Count'),
+                x=alt.X('count:Q', title='listens'),
                 y=alt.Y('song:N', sort='-x', title='Song'),
-                tooltip=['song', 'count']
+                tooltip=['song', 'listens']
             ).properties(
                 width=700,
                 height=400
