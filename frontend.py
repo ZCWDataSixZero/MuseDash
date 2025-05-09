@@ -134,12 +134,14 @@ with st.container():
             paid_songs_df = engine.top_paid_songs(df=cleaned_listen, state=selected_state)
 
             chart_paid_songs = alt.Chart(paid_songs_df).mark_bar().encode(
-                x=alt.X('count:Q', title='Count'),
-                y=alt.Y('song:N', sort='-x', title='Song'),
-                tooltip=['song', 'count']
+                x=alt.X('listens:Q', title='Listens'),
+                y=alt.Y('song:N', sort='-x', title=None),
+                tooltip=['song', 'listens']
             ).properties(
                 width=700,
-                height=400
+                height=400,
+            ).configure_axis(
+                labelFontSize=14 
             )
             st.altair_chart(chart_paid_songs, use_container_width=True)            
     
@@ -149,12 +151,14 @@ with st.container():
             free_songs_df = engine.top_free_songs(df=cleaned_listen, state=selected_state)
             
             chart_free_songs = alt.Chart(free_songs_df).mark_bar().encode(
-                x=alt.X('count:Q', title='Count'),
-                y=alt.Y('song:N', sort='-x', title='Song'),
-                tooltip=['song', 'count']
+                x=alt.X('listens:Q', title='Listens'),
+                y=alt.Y('song:N', sort='-x', title=None),
+                tooltip=['song', 'listens']
             ).properties(
                 width=700,
-                height=400
+                height=400,
+            ).configure_axis(
+                labelFontSize=14 
             )
             st.altair_chart(chart_free_songs, use_container_width=True)
         
