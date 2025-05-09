@@ -18,14 +18,14 @@ spark = SparkSession.builder \
 ## Verify that SparkSession is created
 
 try:
-    df_listen = spark.read.json ('/Users/jim/Projects/p1/spring25data/Data/listen_events')
+    df_listen = spark.read.json ('/Users/isiah/Downloads/Data/listen_events')
     print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
 
 # formatting transforming
 cleaned_listen = engine.clean(df=df_listen)
-artist_list = engine.get_artist_over(df=df_listen,number_of_lis=1000)
+artist_list = engine.get_artist_over(df=cleaned_listen,number_of_lis=1000)
 
 # # allow .css formatting
 # def local_css(file_name):
