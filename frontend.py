@@ -131,7 +131,6 @@ with tab1:
                             '<extra></extra>',
   
 )
-            
 
             st.plotly_chart(line_fig)
         
