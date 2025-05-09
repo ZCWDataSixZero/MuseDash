@@ -15,7 +15,7 @@ spark = SparkSession.builder \
 ## Verify that SparkSession is created
 
 try:
-    df_listen = spark.read.json ('/Users/jim/Projects/p1/spring25data/Data/listen_events')
+    df_listen = spark.read.json ('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
     print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
@@ -27,7 +27,7 @@ artist_list = engine.get_artist_over(df=df_listen,number_of_lis=1000)
 # makes page wide
 st.set_page_config(layout = 'wide')
 
-# allow .css formating
+# allow .css formatting
 def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -164,7 +164,7 @@ with tab2:
         st.write("You selected: ", option)
     else:
         # creating the dataframe of listens for specific artists
-        b = engine.get_artist_state_listen(df=df_listen, artist=option)
+        b = engine.get_artist_state_listen(df=cleaned_listen, artist=option)
 
         # filtering data to what is needed to make map
         c = engine.map_prep_df(df=b)
