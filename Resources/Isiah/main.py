@@ -67,7 +67,7 @@ if paid_artists:
     chart_paid_artists = alt.Chart(paid_artists_df).mark_bar().encode(
         x=alt.X('count:Q', title='Count'),
         y=alt.Y('artist:N', sort='-x', title='Artist'),
-        tooltip=['artist', 'Views']
+        tooltip=['artist', 'count']
     ).properties(
         width=700,
         height=400
@@ -86,7 +86,7 @@ if free_artists:
     chart_free_artists = alt.Chart(free_artists_df).mark_bar().encode(
         x=alt.X('count:Q', title='Count'),
         y=alt.Y('artist:N', sort='-x', title='Artist'),
-        tooltip=['artist', 'Views']
+        tooltip=['artist', 'count']
     ).properties(
         width=700,
         height=400
@@ -105,7 +105,7 @@ if paid_songs:
     chart_paid_songs = alt.Chart(paid_songs_df).mark_bar().encode(
         x=alt.X('count:Q', title='Count'),
         y=alt.Y('song:N', sort='-x', title='Song'),
-        tooltip=['song', 'Listens']
+        tooltip=['song', 'count']
     ).properties(
         width=700,
         height=400
