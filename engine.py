@@ -88,6 +88,8 @@ def top_5(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
     df = df.orderBy(desc('listens')).limit(5)
     return df
 
+
+
 ############
 # angel
 ############
@@ -213,6 +215,20 @@ def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
 
     return df
 
+def get_states_list(df: pyspark.sql.dataframe.DataFrame) -> list:
+    '''
+    Takes in a pyspark dataframe and returns list of states
+
+    Args:
+        df (pyspark.sql.dataframe.DataFrame): dataframe
+
+    Returns:
+        list: list of stats in the dataframe
+
+    '''
+    states_list = df.select("state").distinct().orderBy("state").rdd.flatMap(lambda x: x).collect()
+    return states_list
+
 def fix_multiple_encoding(text):
     """Attempts to fix multiple layers of incorrect encoding."""
     if text is None:
@@ -230,3 +246,73 @@ def fix_multiple_encoding(text):
     except UnicodeDecodeError:
         pass
     return original_text
+
+############
+# Isiah
+############
+
+def top_free_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataFrame:
+    """
+    Filters df to free users and counts free user's top songs
+    
+    Args:
+        df (pyspark.sql.dataframe.DataFrame): dataframe)
+        free_status: If the user is a free subscriber
+
+    Returns:
+        filtered and aggregated dataframe 
+
+    """
+
+    # Filter for free users
+    free_df = df.filter(col('subscription') == 'free')
+
+    # Group by song, count the occurrences, and sort in descending order
+    song_counts = free_df.groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc())
+
+
+    # Limit to top 5 songs and collect results
+    if state == 'Nationwide':
+        top_songs = song_counts.limit(5)
+    else:
+        song_counts_state = paid_df.select('userId', 'artist', 'song', 'subscription', 'city', 'state').\
+            groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc())
+        top_songs = song_counts_state.filter(col("state") == state).limit(5)
+
+    top_songs_pd = top_songs.toPandas().sort_values(by='count', ascending=True)
+    
+    return top_songs_pd
+
+
+def top_paid_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataFrame:
+    """
+    Filters df to paid users and counts paid user's top songs
+
+    Args:
+        df (pyspark.sql.dataframe.Dataframe): dataframe
+        paid_status: If the user is a paid subscriber
+
+    Returns:
+        filtered and aggregated dataframe 
+
+    """
+
+    # Filter for paid users
+    paid_df = df.filter(col('subscription') == 'paid')
+
+    # Group by song, count the occurrences, and sort in descending order
+    song_counts = paid_df.groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc())
+
+     # Limit to top 5 songs and collect results
+    if state == 'Nationwide':
+        top_songs = song_counts.limit(5)
+    else:
+        song_counts_state = paid_df.select('userId', 'artist', 'song', 'subscription', 'city', 'state').\
+            groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc())
+        top_songs = song_counts_state.filter(col("state") == state).limit(5)
+
+    top_songs_pd = top_songs.toPandas().sort_values(by='count', ascending=True)
+    
+    return top_songs_pd
+
+

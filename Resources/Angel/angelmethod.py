@@ -4,11 +4,21 @@ import plotly.express as px
 import streamlit as st
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType
-from pyspark.sql.functions import col, when, to_timestamp, year, month, date_format, sum, when, udf, from_unixtime
+from pyspark.sql.functions import col, when, to_timestamp, year, month, date_format, sum, when, udf, from_unixtime, countDistinct
 
 def get_user_list(df: pyspark.sql.dataframe.DataFrame, selected_states = None) -> pd.core.frame.DataFrame:
-     
-     # Find the paid users
+    '''
+    Goes through every instance of paid users and changes 'free' into paid. This ensures free users aren't being overcounted. 
+
+    Args:
+        df (pyspark.sql.dataframe.DataFrame): dataframe
+        selected_states: names of states
+
+    Returns:
+        filtered and aggregated dataframe
+    ''' 
+    
+    
     paid_users = (
             df.filter(col("level") == "paid")
             .select("userId")
@@ -40,7 +50,12 @@ def get_user_list(df: pyspark.sql.dataframe.DataFrame, selected_states = None) -
     return updated_listening_duration_pd
 
 def fix_multiple_encoding(text):
-    """Attempts to fix multiple layers of incorrect encoding."""
+    '''
+    
+    Attempts to fix multiple layers of incorrect encoding.
+
+    '''
+   
     if text is None:
         return None
     original_text = text
@@ -58,6 +73,19 @@ def fix_multiple_encoding(text):
     return original_text
 
 def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFrame:
+    '''
+        Cleans the dataframe -- fixes encoding issue, adding filtering needed columns, turning 'ts' column into a readable timestamp
+
+    Args:
+        df (pyspark.sql.dataframe.DataFrame): dataframe
+        
+
+    Returns:
+        a cleaned pyspark dataframe ready for visualizing
+    
+    '''
+
+
     fix_encoding_udf = udf(fix_multiple_encoding, StringType())
     df = df.withColumn("artist", fix_encoding_udf(col("artist"))) \
                          .withColumn("song", fix_encoding_udf(col("song")))
@@ -72,3 +100,6 @@ def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
             .withColumn("month_name", date_format(col("ts"), "MMMM"))
 
     return df
+
+
+
