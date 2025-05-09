@@ -4,7 +4,23 @@ import plotly.express as px
 import streamlit as st
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType
-from pyspark.sql.functions import col, when, to_timestamp, year, month, date_format, sum, when, udf, from_unixtime, countDistinct
+from pyspark.sql.functions import col, when, to_timestamp, year, month, date_format, sum, avg, when, udf, from_unixtime, countDistinct
+
+
+# def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
+#     """
+#     Calculates total users and average listening time from a PySpark DataFrame.
+
+#     Args:
+#         df: A PySpark DataFrame with 'user_id' and 'duration_seconds' columns.
+
+#     Returns:
+#         A tuple containing (total_users, average_listening_time).
+#     """
+#     total_users = df.select(col("userId")).distinct().count()
+#     average_listening_time = df.select(avg("duration")).collect()[0][0]
+#     return total_users, average_listening_time
+
 
 def get_user_list(df: pyspark.sql.dataframe.DataFrame, selected_states = None) -> pd.core.frame.DataFrame:
     '''
@@ -71,6 +87,7 @@ def fix_multiple_encoding(text):
     except UnicodeDecodeError:
         pass
     return original_text
+
 
 def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFrame:
     '''

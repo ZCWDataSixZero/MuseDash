@@ -23,6 +23,9 @@ try:
 except Exception as e:
     print(f'Error loading data: {e}')
 
+# total_users, average_listening_time = angelmethod.calculate_kpis(df=df_listen)
+
+# print(total_users, average_listening_time)
 
 a = angelmethod.clean(df=df_listen)
 
@@ -36,11 +39,11 @@ selected_state = st.sidebar.selectbox("Filter by State (Optional):", ["All"] + a
 b = angelmethod.get_user_list(df=a, selected_states=selected_state)
 
 
-#Mock KPIs until I can get the real thing working
-col1, col2, col3 = st.columns(3)
-col1.metric("Total Users", "1k+", "500")
-col2.metric("Average Listening Hours", "9 hours", "-2%")
-col3.metric("Average Songs per Session", "7", "3")
+# #Create KPIs
+# col1, col2 = st.columns(2)
+# st.metric("Total Users", "1k+", )
+# st.metric("Average Listening Hours", f"{average_listening_time / 3600:.2f} hours")
+
 
 
 
@@ -60,12 +63,22 @@ line_fig = px.line(
     labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
         )
 
+line_fig.update_layout(hovermode="x unified")
 
+# Update hovertemplate for the 'Paid' trace
 line_fig.update_traces(
-    hovertemplate = f'<span style="font-size: 14px;">' +
-                    "<b>%{x}</b><br>" +
-                    "%{y} seconds" +
-                    '</span><extra></extra>'
-    
+    selector={'name': 'paid'},
+    hovertemplate='<span style="font-size: 18px;">' +
+                  'Paid: %{y:.2f}' +
+                  '<extra></extra>'
+)
+
+# Update hovertemplate for the 'Free' trace
+line_fig.update_traces(
+    selector={'name': 'free'},
+    hovertemplate='<span style="font-size: 18px;">' +
+                  'Free: %{y:.2f}' +
+                  '<extra></extra>',
+  
 )
 st.plotly_chart(line_fig)

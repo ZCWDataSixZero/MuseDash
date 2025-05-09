@@ -18,15 +18,15 @@ spark = SparkSession.builder \
 ## Verify that SparkSession is created
 
 try:
-    df_listen = spark.read.json ('./Data/listen_events')
+    df_listen = spark.read.json ('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
     print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
 
 
-
+clean_listen = kunle_engine.clean(df=df_listen)
 # list of artists with a certain number
-artist_list = engine.get_arist_over_1000(df=df_listen,number_of_lis=1000)
+artist_list = kunle_engine.get_artist_over_1000(df=clean_listen,number_of_lis=1000)
 
 
 #selected_artist = st.sidebar.selectbox()
@@ -45,7 +45,7 @@ with tab1:
         'Select an Artist',
         artist_list,
         index=None,
-        placeholder="Choosen Artis",
+        placeholder="Chosen Artist",
         accept_new_options = True
     )
         st.write("You selected: ", option)
@@ -56,10 +56,10 @@ with tab1:
         pass
     else:
         # creating the dataframe of listens for specific artists
-        b = engine.get_artist_state_listen(df=df_listen, artist=option)
+        b = kunle_engine.get_artist_state_listen(df=clean_listen, artist=option)
 
         # filtering data to what is needed to make map
-        c = engine.map_prep_df(df=b)
+        c = kunle_engine.map_prep_df(df=b)
         ## creating the maps
         fig = go.Figure(data=go.Choropleth(
             locations=c.state, # Spatial coordinates
@@ -72,10 +72,12 @@ with tab1:
         # adding context to the map
         fig.update_layout(
             title_text = f'Number of {option} Listens \n 2024-2025',
-            geo_scope='usa', # limite map scope to USA
+            geo_scope='usa', # limit map scope to USA
         )
 
         st.plotly_chart(fig)
+
+        st.dataframe(b.toPandas(), hide_index=True)
 
 
 
