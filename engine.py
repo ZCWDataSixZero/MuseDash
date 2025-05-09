@@ -277,7 +277,10 @@ def top_free_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataF
          top_songs = free_df.groupBy('state','song').agg(count('*').alias('count'))\
             .orderBy(col('count').desc()).filter(col('state')== state).limit(5)
 
-    top_songs_pd = top_songs.toPandas().sort_values(by='count', ascending=True)
+     # Rename 'count' column to 'listens'
+    top_songs = top_songs.withColumnRenamed('count', 'listens')
+
+    top_songs_pd = top_songs.toPandas().sort_values(by='listens', ascending=True)
     
     return top_songs_pd
 
@@ -308,7 +311,10 @@ def top_paid_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataF
         top_songs = paid_df.groupBy('state','song').agg(count('*').alias('count')) \
             .orderBy(col('count').desc()).filter(col('state')== state).limit(5)
 
-    top_songs_pd = top_songs.toPandas().sort_values(by='count', ascending=True)
+    # Rename 'count' column to 'listens'
+    top_songs = top_songs.withColumnRenamed('count', 'listens')
+
+    top_songs_pd = top_songs.toPandas().sort_values(by='listens', ascending=True)
     
     return top_songs_pd
 
