@@ -49,7 +49,7 @@ def top_free_artists(df: pyspark.sql.DataFrame, free_status: str) -> pyspark.sql
     # Group by artist, count occurrences, and sort in descending order
     free_artist_counts = free_df.groupBy('artist').agg(count('*').alias('count')).orderBy(col('count').desc())
 
-    # Limit to top 5 artists and collect results
+    # Limit to top 5 artists and return results
     top_artists = free_artist_counts.limit(5)
 
     return top_artists
@@ -75,7 +75,7 @@ def top_free_songs(df: pyspark.sql.DataFrame, free_status: str) -> pyspark.sql.D
     song_counts = free_df.groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc())
 
 
-    # Limit to top 5 songs and collect results
+    # Limit to top 5 songs and return results
     top_songs = song_counts.limit(5)
 
     return top_songs
@@ -100,7 +100,7 @@ def top_paid_songs(df: pyspark.sql.DataFrame, paid_status: str) -> pyspark.sql.D
     # Group by song, count the occurrences, and sort in descending order
     song_counts = paid_df.groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc())
 
-    # Limit to top 5 songs and collect results
+    # Limit to top 5 songs and return results
     top_songs = song_counts.limit(5)
 
     return top_songs
