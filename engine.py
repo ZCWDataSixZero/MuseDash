@@ -272,12 +272,12 @@ def top_free_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataF
 
     # Limit to top 5 songs and collect results
     if state == 'Nationwide':
-        top_songs = free_df.groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc()).limit(5)
+        top_songs = free_df.groupBy('song').agg(count('*').alias('listens')).orderBy(col('listens').desc()).limit(5)
     else:
-         top_songs = free_df.groupBy('state','song').agg(count('*').alias('count'))\
-            .orderBy(col('count').desc()).filter(col('state')== state).limit(5)
+         top_songs = free_df.groupBy('state','song').agg(count('*').alias('listens'))\
+            .orderBy(col('listens').desc()).filter(col('state')== state).limit(5)
 
-    top_songs_pd = top_songs.toPandas().sort_values(by='count', ascending=True)
+    top_songs_pd = top_songs.toPandas().sort_values(by='listens', ascending=True)
     
     return top_songs_pd
 
@@ -303,12 +303,12 @@ def top_paid_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataF
 
      # Limit to top 5 songs and collect results
     if state == 'Nationwide':
-         top_songs = paid_df.groupBy('song').agg(count('*').alias('count')).orderBy(col('count').desc()).limit(5)
+         top_songs = paid_df.groupBy('song').agg(count('*').alias('listens')).orderBy(col('listens').desc()).limit(5)
     else:
-        top_songs = paid_df.groupBy('state','song').agg(count('*').alias('count')) \
-            .orderBy(col('count').desc()).filter(col('state')== state).limit(5)
+        top_songs = paid_df.groupBy('state','song').agg(count('*').alias('listens')) \
+            .orderBy(col('listens').desc()).filter(col('state')== state).limit(5)
 
-    top_songs_pd = top_songs.toPandas().sort_values(by='count', ascending=True)
+    top_songs_pd = top_songs.toPandas().sort_values(by='listens', ascending=True)
     
     return top_songs_pd
 

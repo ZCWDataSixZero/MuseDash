@@ -75,9 +75,26 @@ with tab1:
             geo_scope='usa', # limit map scope to USA
         )
 
-        st.plotly_chart(fig)
+        fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 
-        st.dataframe(b.toPandas(), hide_index=True)
+        event = st.plotly_chart(fig, on_select="rerun", selection_mode=["points","box","lasso"])
+
+        points = event["selection"].get("points", [])
+        
+        #sigla = first_point["properties"].get("sigla", None)
+        #st.plotly_chart(fig)  points = event["selection"].get("points", [])
+        if points:
+            first_point = points[0]
+            location = first_point['location']
+            st.write("You selected: ", location)
+        else:
+            st.write("You selected: ", 'Nationwide')
+
+        #event = st.plotly_chart(fig, on_select="rerun", selection_mode=["points","box","lasso"])
+
+        #st.subheader("You selected: ", event)
+
+        # st.dataframe(b.toPandas(), hide_index=True)
 
 
 
