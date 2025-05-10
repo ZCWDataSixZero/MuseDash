@@ -3,12 +3,6 @@ import numpy as np
 import plotly.express as px
 import angelmethod
 import plotly.graph_objects as go
-
-# fig = px.choropleth(locations=["CA", "TX", "NY",'AK'], locationmode="USA-states", color=[1,2,3,4], scope="usa")
-
-
-# st.plotly_chart(fig)
-
 from pyspark.sql import SparkSession
 
 spark = SparkSession.builder \
@@ -18,14 +12,14 @@ spark = SparkSession.builder \
 ## Verify that SparkSession is created
 
 try:
-    df_listen = spark.read.json ('/Users/angel/Downloads/spring25data/listen_events')
+    df_listen = spark.read.json ('/Users/angel/Downloads/spring25data/app/listen_events')
     print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
 
-# total_users, average_listening_time = angelmethod.calculate_kpis(df=df_listen)
+total_users, average_listening_time, total_duration_sum = angelmethod.calculate_kpis(df=df_listen)
 
-# print(total_users, average_listening_time)
+print(total_users, average_listening_time, total_duration_sum)
 
 a = angelmethod.clean(df=df_listen)
 
@@ -39,10 +33,11 @@ selected_state = st.sidebar.selectbox("Filter by State (Optional):", ["All"] + a
 b = angelmethod.get_user_list(df=a, selected_states=selected_state)
 
 
-# #Create KPIs
-# col1, col2 = st.columns(2)
-# st.metric("Total Users", "1k+", )
-# st.metric("Average Listening Hours", f"{average_listening_time / 3600:.2f} hours")
+#Create KPIs
+col1, col2, col3 = st.columns(3)
+st.metric("Total Users", "1k+")
+st.metric("Average Listening in Minutes", f"{average_listening_time / 60:.2f} minutes")
+st.metric("Total Listening Hours(Paid)", f"{total_duration_sum / 3600:.2f} hours")
 
 
 
