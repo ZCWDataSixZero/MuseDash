@@ -163,7 +163,7 @@ with st.container(border=True):
                 color=alt.Color(field="subscription", type="nominal",
                                 scale=alt.Scale(domain=['free', 'paid'],
                                                 range=['orange', 'blue']),
-                                legend=alt.Legend(orient="bottom")),
+                                legend=alt.Legend(orient="bottom", titleFontSize=18, labelFontSize=18)),
                 order=alt.Order(field="count", sort="descending"),
                 tooltip=[
                     "subscription",
