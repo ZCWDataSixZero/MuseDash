@@ -26,6 +26,7 @@ except Exception as e:
 # formatting transforming
 cleaned_listen = engine.clean(df=df_listen)
 artist_list = engine.get_artist_over(df=cleaned_listen,number_of_lis=1000)
+location = 'Nationwide'
 
 # # allow .css formatting
 # def local_css(file_name):
@@ -41,12 +42,14 @@ st.markdown("<h1 style='text-align: center;'>MuseDash</h1>", unsafe_allow_html=T
 
 col_table = st.columns((5, 10), gap='medium')
 
-# Sidebar
-st.sidebar.header("Select a State")
-available_states = engine.get_states_list(cleaned_listen)
-selected_state = st.sidebar.selectbox("Filter by State (Optional):", 
-                                    ['Nationwide'] + available_states,
-                                    )
+# # Sidebar
+# st.sidebar.header("Select a State")
+# available_states = engine.get_states_list(cleaned_listen)
+# selected_state = st.sidebar.selectbox("Filter by State (Optional):", 
+#                                     ['Nationwide'] + available_states,
+#                                     )
+
+selected_state = location
 # titles depending on state selected
 if selected_state == 'Nationwide':
     top_10_header = "Top 10 National Artists"
@@ -94,7 +97,6 @@ with col_table[0]:
 with col_table[1]:
     with st.container(border=True):
 
-        # st.sidebar.header("Select an Artist")
         option = st.selectbox(
         'Filter by Artist',
         artist_list,
@@ -127,7 +129,20 @@ with col_table[1]:
                 geo_scope='usa', # limit map scope to USA
             )
 
-            st.plotly_chart(fig)
+            fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+            event = st.plotly_chart(fig, on_select="rerun", selection_mode=["points","box","lasso"])
+
+            points = event["selection"].get("points", [])
+            if points:
+                first_point = points[0]
+                location = first_point['location']
+                #st.write("You selected: ", location)
+            else:
+                #st.write("You selected: ", 'Nationwide')
+                location = 'Nationwide'
+
+            #st.plotly_chart(fig)
 
 with col_table[1]:
     
