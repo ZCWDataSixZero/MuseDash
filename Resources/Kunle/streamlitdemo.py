@@ -33,7 +33,7 @@ artist_list = kunle_engine.get_artist_over_1000(df=clean_listen,number_of_lis=10
 
 
 
-
+location = 'Nationwide'
 #creating tabs
 tab1, tab2 = st.tabs(["Map", "2nd for giggles"])
 
@@ -95,6 +95,26 @@ with tab1:
         #st.subheader("You selected: ", event)
 
         # st.dataframe(b.toPandas(), hide_index=True)
+    # if not location:
+    #     selected_state = "Nationwide"
+    # else:
+    #     selected_state = location
+    selected_state = location
+    # titles depending on state selected
+    if selected_state == 'Nationwide' :
+        top_10_header = "Top 10 National Artists"
+        pie_title = "National Subscription Type Distribution"
+        paid_title = 'Top Songs for Paid Users'
+        free_title = 'Top Songs for Free Users'
+    else:
+        top_10_header = f"Top 10 Artists in {location}"
+        pie_title = f"Subscription Type Distribution in {location}"
+        paid_title = f'Top Songs for Paid Users in {location}'
+        free_title = f'Top Songs for Free Users in {location}'
+
+    top_10 = kunle_engine.get_top_10_artists(df=clean_listen, state=location)
+    st.header(top_10_header)
+    st.dataframe(top_10, hide_index=True)
 
 
 

@@ -123,4 +123,36 @@ def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
 
     return df
 
+######################
+def get_top_10_artists(df: pyspark.sql.dataframe.DataFrame , state: str) -> pd.core.frame.DataFrame:
+    """
+    Finds the top 10 artists, ordered by play count.
 
+    Args:
+        dataframe: An optional PySpark DataFrame. Defaults to the globally defined df_listen.
+        selected_state: An optional string representing the state to filter by.
+                        If None (default), it aggregates across all states.
+
+    Returns:
+        A PySpark DataFrame containing the top 10 artists and their counts.
+    """
+    # if df is None:
+    #     print("Warning: df_listen is None. Ensure data loading was successful.")
+    #     return None
+
+    if state == 'Nationwide':
+        #title = "Top 10 National Artists"
+        filtered_df = df
+    else:
+        #title = f"Top 10 Artists in {selected_state}"
+        filtered_df = df.filter(col("state") == state)
+    
+        
+
+    top_10_artists_df = filtered_df.groupBy("artist") \
+                                   .agg(count("*").alias("count")) \
+                                   .orderBy(desc("count")) \
+                                   .limit(10) 
+
+    #print(title + ":")
+    return top_10_artists_df.toPandas()
