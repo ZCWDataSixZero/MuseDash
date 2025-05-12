@@ -17,8 +17,6 @@ spark = SparkSession.builder \
     .appName("MuseDash PySpark") \
         .getOrCreate()
 
-## Verify that SparkSession is created
-
 try:
     df_listen = spark.read.json ('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
     print('Data loaded successfully')
@@ -42,14 +40,7 @@ st.markdown("<h1 style='text-align: center;'>MuseDash</h1>", unsafe_allow_html=T
 #st.title("Muse Dash")
 
 
-col_table = st.columns((5, 10), gap='medium')
-
-# # Sidebar
-# st.sidebar.header("Select a State")
-# available_states = engine.get_states_list(cleaned_listen)
-# selected_state = st.sidebar.selectbox("Filter by State (Optional):", 
-#                                     ['Nationwide'] + available_states,
-#                                     )
+col_table = st.columns((5, 10), gap='medium')                                  
 
 
 with st.container(border=True):
@@ -95,9 +86,6 @@ with st.container(border=True):
                     geo_scope='usa', # limit map scope to USA
                     margin={"r":0,"t":0,"l":0,"b":0} # setting margins around to 0s, filling the container as much as possible
                 )
-
-                #fig.update_layout()
-
 
                 event = st.plotly_chart(fig, on_select="rerun", selection_mode=["points","box","lasso"])
 
