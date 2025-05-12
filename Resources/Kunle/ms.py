@@ -5,6 +5,8 @@ import e
 import plotly.graph_objects as go
 import altair as alt
 
+from pyspark.sql.functions import col
+
 
 from pyspark.sql import SparkSession
 
@@ -73,13 +75,17 @@ with st.container(border=True):
 
                 # filtering data to what is needed to make map
                 c = e.map_prep_df(df=b)
+                c_max = c['listens'].max()
+                c_min = c['listens'].min()
                 ## creating the maps
                 fig = go.Figure(data=go.Choropleth(
                     locations=c.state, # Spatial coordinates
                     z = c.listens, # Data to be color-coded
                     locationmode = 'USA-states', # set of locations match entries in `locations`
                     colorscale = 'Blues',
-                    colorbar_title = "Number of\n Listens"
+                    #color = [c_min, c_max ],
+                    colorbar_title = "Number of\n Listens",
+                    
                 ))
 
                 # adding context to the map
