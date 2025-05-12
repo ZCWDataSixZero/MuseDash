@@ -1,103 +1,91 @@
-/* Light Theme (Default) */
-:root {
-    --background-gradient-start: #cfc0ea; /*here to end set the color shift backgroun */
-    --background-gradient-mid1: #d1eafe;
-    --background-gradient-mid2: #9acbca;
-    --background-gradient-end: #cdc2d1;
-    --text-primary: #333;
-    --border-primary: #eee;
-    --accent-color-title: #ff514b;
-    --accent-color-sidebar-header: #d21919;
-    --accent-color-header: #a60707;
-    --accent-color-subheader: #FFA500;
-    --chart-background: transparent;
-}
-
-/* Dark Theme Overrides */
-[data-streamlit="true"].st-dark {
-    --background-gradient-start: #1a1a1a;
-    --background-gradient-mid1: #333333;
-    --background-gradient-mid2: #555555;
-    --background-gradient-end: #222222;
+/* Global container */
+[data-testid="stApp"] {
+    --background-color: #222222;
+    --secondary-background-color: #1500f600;
     --text-primary: #f0f0f0;
     --border-primary: #444;
-    --accent-color-title: #ff8a80;
-    --accent-color-sidebar-header: #ff6659;
-    --accent-color-header: #ff4d4d;
+    --accent-color-title: #ffffff;
+    --accent-color-sidebar-header: #0d0d15;
+    --accent-color-header: #020209b2;
     --accent-color-subheader: #ffcc80;
     --chart-background: #333;
 }
 
-/* Remove header background */
-.stApp > header {
-    background-color: transparent;
-}
-
-/* Apply the gradient background to the main app */
-.stApp {
-    background: linear-gradient(315deg, var(--background-gradient-start) 3%, var(--background-gradient-mid1) 38%, var(--background-gradient-mid2) 68%, var(--background-gradient-end) 98%);
-    animation: gradient 15s ease infinite;
-    background-size: 400% 400%;
-    background-attachment: fixed;
-}
-
-@keyframes gradient {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
-}
-
-Style the sidebar
+/* Sidebar styling */
 [data-testid="stSidebarUserContent"],
 [data-testid="stSidebar"] {
-    background-color: rgba(255, 255, 255, 0.15); /* Slightly transparent white for better contrast */
-    backdrop-filter: blur(10px); /* Apply a blur effect for better readability over the gradient */
+    background-color: var(--secondary-background-color);
     color: var(--text-primary);
-    border-right: 1px solid var(--border-primary);
+    border-right: 1px solid var(--border-primary); 
+    backdrop-filter: blur(10px);
 }
 
-/* Style element containers (for charts, dataframes, etc.) */
-[data-testid="stElementContainer"] {
-    color: var(--text-primary);
-    border-radius: 0;
+/* Empty container handling */
+[data-testid="stElementContainer"]:empty {
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
     box-shadow: none !important;
-    margin: 0.5em auto;
-    padding: 0.8em;
+    background: transparent !important;
+}
+
+/* Prevent styling on first empty container at top */
+.block-container > div:first-of-type:empty {
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Prevent empty containers that might create unwanted space */
+[data-testid="stElementContainer"]:empty {
+    display: none !important;
+}
+
+/* General container styling */
+[data-testid="stElementContainer"]:has(*) {
+    color: var(--text-primary);
+    background-color: var(--background-color);
+    border: 1px solid var(--border-primary);
+    box-shadow: 0em 1px 3px rgba(81, 81, 81, 0.378);
+    padding-left: 1em !important;
+    padding-right: 1em !important;
+    padding-top: 1em !important;
+    padding-bottom: 0.5em !important;
+    margin: 1em auto;
     text-align: center;
 }
 
-/* Style the main title "Muse Dash" */
-div.element-container h1 {
-    color: var(--accent-color-title) !important;
+/* Header styling: control padding for header and subheader */
+[data-testid="stHeader"] {
+    margin-top: 0em !important;
+    padding-top: 0em !important;
+    padding-bottom: 0em !important;
+}
+
+/* Title styling (Muse Dash) */
+div.element-container h1,
+h1 {
     font-size: 5em !important;
     text-align: center;
+    color: var(--accent-color-title);
+    margin: 0em !important;
+    padding: 0em !important;
 }
 
-/* Style the sidebar header "Select a State" */
-div.st-sidebar h2 {
-    color: var(--accent-color-sidebar-header) !important;
-    font-size: 1.8em !important;
-    font-weight: bold !important;
+/* Subheader styling */
+[data-testid="stSubheader"] {
+    padding-top: 0em !important;
+    padding-bottom: 0.5em !important;
+    margin-top: 0em !important;
+    font-size: 2em !important;  /* Adjust as needed */
+    color: var(--accent-color-subheader);
 }
 
-/* Style the main section headers (e.g., "Top 10 National Artists") */
-h1, h2, h3 {
-    color: var(--accent-color-header) !important;
-}
-
-/* Style subheaders */
-h4, h5, h6, .st-subheader {
-    color: var(--accent-color-subheader) !important;
-}
-
-/* Specific targeting for the "Top 10 Artists" header in the left column */
-div:nth-child(1) h2:nth-child(1) {
-    border-bottom: 2px solid #6b0080; /* Keep this specific color */
-    padding-bottom: 0.2em;
+/* Optional: Additional padding adjustments for other elements if needed */
+[data-testid="stSelectbox"],
+[data-testid="stTitle"],
+[data-testid="stText"] {
+    padding: 0 !important;
+    margin-top: 0 !important;
 }
