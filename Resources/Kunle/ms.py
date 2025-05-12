@@ -1,13 +1,14 @@
 import streamlit as st
 import numpy as np
 import plotly.express as px
-import engine
+import e
 import plotly.graph_objects as go
 import altair as alt
 
+from pyspark.sql.functions import col
+
 
 from pyspark.sql import SparkSession
-
 
 # makes page wide
 st.set_page_config(layout = 'wide')
@@ -17,14 +18,14 @@ spark = SparkSession.builder \
         .getOrCreate()
 
 try:
-    df_listen = spark.read.json ('/Users/angel/Downloads/spring25data/app/listen_events')
+    df_listen = spark.read.json ('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
     print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
 
 # formatting transforming
-cleaned_listen = engine.clean(df=df_listen)
-artist_list = engine.get_artist_over(df=cleaned_listen,number_of_lis=1000)
+cleaned_listen = e.clean(df=df_listen)
+artist_list = e.get_artist_over(df=cleaned_listen,number_of_lis=1000)
 location = 'Nationwide'
 
 # # allow .css formatting
@@ -62,7 +63,7 @@ with st.container(border=True):
                     st.write("You selected: ", option)
             else:
                 # creating the dataframe of listens for specific artists
-                b = engine.get_artist_state_listen(df=cleaned_listen, artist=option)
+                b = e.get_artist_state_listen(df=cleaned_listen, artist=option)
 
                 # filtering data to what is needed to make map
                 c = e.map_prep_df(df=b)
@@ -122,7 +123,7 @@ with st.container(border=True):
     with col_table[0]:
         with st.container(border=True):
             # printing top ten chart
-            top_10 = engine.get_top_10_artists(df=cleaned_listen, state=selected_state)
+            top_10 = e.get_top_10_artists(df=cleaned_listen, state=selected_state)
             st.header(top_10_header)
             st.dataframe(top_10, hide_index=True)
 
@@ -130,32 +131,23 @@ with st.container(border=True):
     with col_table[0]:
         with st.container(border=True):
             # printing pie
-            pie_df = engine.create_subscription_pie_chart(df=cleaned_listen, state=selected_state)
+            pie_df = e.create_subscription_pie_chart(df=cleaned_listen, state=selected_state)
 
 
-        chart = alt.Chart(pie_df).mark_arc().encode(
-        theta=alt.Theta(field="count", type="quantitative"),
-        color=alt.Color(field="subscription", type="nominal",
-                        scale=alt.Scale(domain=['free', 'paid'],
-                                        range=['orange', 'blue']),
-                        legend=alt.Legend(title="Subscription Type", orient="bottom")),
-        order=alt.Order(field="count", sort="descending"),
-        tooltip=["subscription", "count"]
-    ).properties(
-        title=pie_title
-    ).configure_view(
-        fillOpacity=0  # Make the chart background transparent
-    )
-        st.altair_chart(chart)
-        #Create KPIs
-        total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=df_listen)
-        col1, col2, col3 = st.columns([1.5, 2, 2.2])
-        with col1:
-            st.metric("Total Users", "1k+")
-        with col2:
-            st.metric("Average Listening", "4 MIN")
-        with col3:
-            st.metric("Total Paid Listening", "70k+ HR")
+            chart = alt.Chart(pie_df).mark_arc().encode(
+            theta=alt.Theta(field="count", type="quantitative"),
+            color=alt.Color(field="subscription", type="nominal",
+                            scale=alt.Scale(domain=['free', 'paid'],
+                                            range=['orange', 'blue']),
+                            legend=alt.Legend(title="Subscription Type", orient="bottom")),
+            order=alt.Order(field="count", sort="descending"),
+            tooltip=["subscription", "count"]
+        ).properties(
+            title=pie_title
+        ).configure_view(
+            fillOpacity=0  # Make the chart background transparent
+        )
+            st.altair_chart(chart)
         
     
 
@@ -166,7 +158,7 @@ with st.container(border=True):
             with st.container(border=True):
                 # paid songs charts
                 st.subheader(paid_title)
-                paid_songs_df = engine.top_paid_songs(df=cleaned_listen, state=selected_state)
+                paid_songs_df = e.top_paid_songs(df=cleaned_listen, state=selected_state)
 
                 chart_paid_songs = alt.Chart(paid_songs_df).mark_bar().encode(
                     x=alt.X('listens:Q', title='Listens'),
@@ -184,7 +176,7 @@ with st.container(border=True):
             with st.container(border=True):
                 # free songs chart
                 st.subheader(free_title)
-                free_songs_df = engine.top_free_songs(df=cleaned_listen, state=selected_state)
+                free_songs_df = e.top_free_songs(df=cleaned_listen, state=selected_state)
                 
                 chart_free_songs = alt.Chart(free_songs_df).mark_bar().encode(
                     x=alt.X('listens:Q', title='Listens'),
@@ -201,24 +193,24 @@ with st.container(border=True):
             with col_line:
                 with st.container(border=True):
                     # listen graph creation
-                    listen_duration = engine.get_user_list(df=cleaned_listen, state=selected_state)
+                    listen_duration = e.get_user_list(df=cleaned_listen, state=selected_state)
 
-                # Determine the title based on the selected state
-                if selected_state == "Nationwide":
-                    chart_title = "How long are users listening in the USA?"
-                else:
-                    chart_title = f"How long are users listening in {selected_state}?"
-                    
-                #create the line graph
-                line_fig = px.line(
-                    listen_duration,
-                    x="month_name",
-                    y="total_duration",
-                    color="subscription",
-                    title=chart_title,
-                    labels={"month_name": "Month", "total_duration": "Total Duration (minutes)"}
-                        )
-                line_fig.update_layout(hovermode="x unified")
+                    # Determine the title based on the selected state
+                    if selected_state == "Nationwide":
+                        pass
+                    else:
+                        pass
+                        
+                    #create the line graph
+                    line_fig = px.line(
+                        listen_duration,
+                        x="month_name",
+                        y="total_duration",
+                        color="subscription",
+                        title=chart_title,
+                        labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
+                            )
+                    line_fig.update_layout(hovermode="x unified")
 
                     # Update hovertemplate for the 'Paid' trace
                     line_fig.update_traces(

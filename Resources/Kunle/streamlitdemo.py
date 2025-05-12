@@ -33,7 +33,7 @@ artist_list = kunle_engine.get_artist_over_1000(df=clean_listen,number_of_lis=10
 
 
 
-
+location = 'Nationwide'
 #creating tabs
 tab1, tab2 = st.tabs(["Map", "2nd for giggles"])
 
@@ -60,12 +60,15 @@ with tab1:
 
         # filtering data to what is needed to make map
         c = kunle_engine.map_prep_df(df=b)
+        c_max = c['listens'].max()
+        c_min = c['listens'].min()
         ## creating the maps
-        fig = go.Figure(data=go.Choropleth(
+        fig = go.Figure(data=px.Choropleth(
             locations=c.state, # Spatial coordinates
-            z = c.listens, # Data to be color-coded
+            # z = c.listens, # Data to be color-coded
             locationmode = 'USA-states', # set of locations match entries in `locations`
             colorscale = 'Blues',
+            range_color=(c_min, c_max),
             colorbar_title = "Number of\n Listens"
         ))
 
@@ -95,6 +98,26 @@ with tab1:
         #st.subheader("You selected: ", event)
 
         # st.dataframe(b.toPandas(), hide_index=True)
+    # if not location:
+    #     selected_state = "Nationwide"
+    # else:
+    #     selected_state = location
+    selected_state = location
+    # titles depending on state selected
+    if selected_state == 'Nationwide' :
+        top_10_header = "Top 10 National Artists"
+        pie_title = "National Subscription Type Distribution"
+        paid_title = 'Top Songs for Paid Users'
+        free_title = 'Top Songs for Free Users'
+    else:
+        top_10_header = f"Top 10 Artists in {location}"
+        pie_title = f"Subscription Type Distribution in {location}"
+        paid_title = f'Top Songs for Paid Users in {location}'
+        free_title = f'Top Songs for Free Users in {location}'
+
+    top_10 = kunle_engine.get_top_10_artists(df=clean_listen, state=location)
+    st.header(top_10_header)
+    st.dataframe(top_10, hide_index=True)
 
 
 
