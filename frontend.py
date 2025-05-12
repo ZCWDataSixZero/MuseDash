@@ -221,7 +221,7 @@ with st.container(border=True):
                 line_fig.update_layout(hovermode="x unified")
 
                     # Update hovertemplate for the 'Paid' trace
-                    line_fig.update_traces(
+                line_fig.update_traces(
                         selector={'name': 'paid'},
                         hovertemplate='<span style="font-size: 18px;">' +
                                     'Paid: %{y:.2f}' +
@@ -229,7 +229,7 @@ with st.container(border=True):
                         )
 
                     # Update hovertemplate for the 'Free' trace
-                    line_fig.update_traces(
+                line_fig.update_traces(
                         selector={'name': 'free'},
                         hovertemplate='<span style="font-size: 18px;">' +
                                     'Free: %{y:.2f}' +
@@ -237,4 +237,4 @@ with st.container(border=True):
             
                     )
 
-                    st.plotly_chart(line_fig)
+                st.plotly_chart(line_fig)
