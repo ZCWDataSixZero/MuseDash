@@ -77,18 +77,18 @@ with col_table[0]:
 
 
         chart = alt.Chart(pie_df).mark_arc().encode(
-        theta=alt.Theta(field="count", type="quantitative"),
-        color=alt.Color(field="subscription", type="nominal",
-                        scale=alt.Scale(domain=['free', 'paid'],
-                                        range=['orange', 'blue']),
-                        legend=alt.Legend(title="Subscription Type", orient="bottom")),
-        order=alt.Order(field="count", sort="descending"),
-        tooltip=["subscription", "count"]
-    ).properties(
-        title=pie_title
-    ).configure_view(
+            theta=alt.Theta(field="count", type="quantitative"),
+            color=alt.Color(field="subscription", type="nominal",
+                            scale=alt.Scale(domain=['free', 'paid'],
+                                            range=['orange', 'blue']),
+                            legend=alt.Legend(title="Subscription Type", orient="bottom")),
+            order=alt.Order(field="count", sort="descending"),
+            tooltip=["subscription", "count"]
+        ).properties(
+            title=pie_title
+        ).configure_view(
         fillOpacity=0  # Make the chart background transparent
-    )
+        )
         st.altair_chart(chart)
     
 with col_table[1]:

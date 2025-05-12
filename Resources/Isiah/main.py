@@ -1,138 +1,236 @@
-import matplotlib.pyplot as plt
-from pyspark.sql import SparkSession
-from prep import top_paid_artists, top_free_artists, top_free_songs, top_paid_songs
-import prep
 import streamlit as st
-from pyspark.sql.functions import udf, col
-from pyspark.sql.types import StringType
-import pandas as pd
+import numpy as np
+import plotly.express as px
+import engine
+import plotly.graph_objects as go
 import altair as alt
 
 
+from pyspark.sql import SparkSession
 
-@st.cache_resource
-def create_spark_session():
-    return SparkSession.builder.appName("Streamlit PySpark").getOrCreate()
+# makes page wide
+st.set_page_config(layout = 'wide')
 
-def fix_multiple_encoding(text):
-    """Attempts to fix multiple layers of incorrect encoding."""
-    if text is None:
-        return None
-    original_text = text
-    try:
-        decoded_once = text.encode('latin-1').decode('utf-8', errors='replace')
-        if decoded_once != original_text and '?' not in decoded_once:
-            decoded_twice = decoded_once.encode('latin-1').decode('utf-8', errors='replace')
-            if decoded_twice != decoded_once and '?' not in decoded_twice:
-                return decoded_twice
-            return decoded_once
-    except UnicodeEncodeError:
-        pass
-    except UnicodeDecodeError:
-        pass
-    return original_text
+spark = SparkSession.builder \
+    .appName("MuseDash PySpark") \
+        .getOrCreate()
 
-file_path = '/Users/isiah/Downloads/Data/listen_events'
-df_listen = None
+## Verify that SparkSession is created
 
 try:
-    spark = create_spark_session()
-    df_listen_raw = spark.read.json(file_path)
-    print('Data loaded successfully from listen_events.')
-
-    fix_encoding_udf = udf(fix_multiple_encoding, StringType())
-
-    df_fixed = df_listen_raw.withColumn("artist", fix_encoding_udf(col("artist"))) \
-                             .withColumn("song", fix_encoding_udf(col("song")))
-    df_listen = df_fixed.select('userId', 'lastName', 'firstName', 'gender', 'song', 'artist', 'duration', 'sessionId', 'itemInSession', 'auth', 'level', 'city', 'state', 'zip', 'lat', 'lon', 'registration', 'userAgent', 'ts')
-    df_listen = df_listen.withColumnRenamed("level", "subscription")
-
+    df_listen = spark.read.json ('/Users/isiah/Downloads/Data/listen_events')
+    print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
-    st.error("Failed to load data. Please check the console for errors.")
-    st.stop()
+
+# formatting transforming
+cleaned_listen = engine.clean(df=df_listen)
+artist_list = engine.get_artist_over(df=cleaned_listen,number_of_lis=1000)
+
+# # allow .css formatting
+# def local_css(file_name):
+#     with open(file_name) as f:
+#         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# local_css("style.css")
+                   
+# Streamlit Titling
+st.markdown("<h1 style='text-align: center;'>MuseDash</h1>", unsafe_allow_html=True)
+#st.title("Muse Dash")
 
 
+col_table = st.columns((5, 10), gap='medium')
 
-# Display top paid artists
-paid_artists = prep.top_paid_artists(df=df_listen, paid_status='paid')
-st.title("Top Artists and Songs Analysis")
-
-# Top Paid Artists
-if paid_artists:
-    st.subheader("Horizontal Bar Chart of Top Artists for Paid Users")
-    paid_artists_df = paid_artists.toPandas()
-    paid_artists_df = paid_artists_df.sort_values(by='count', ascending=True)
-
-    chart_paid_artists = alt.Chart(paid_artists_df).mark_bar().encode(
-        x=alt.X('count:Q', title='Count'),
-        y=alt.Y('artist:N', sort='-x', title='Artist'),
-        tooltip=['artist', 'count']
-    ).properties(
-        width=700,
-        height=400
-    )
-    st.altair_chart(chart_paid_artists, use_container_width=True)
+# Sidebar
+st.sidebar.header("Select a State")
+available_states = engine.get_states_list(cleaned_listen)
+selected_state = st.sidebar.selectbox("Filter by State (Optional):", 
+                                    ['Nationwide'] + available_states,
+                                    )
+# titles depending on state selected
+if selected_state == 'Nationwide':
+    top_10_header = "Top 10 National Artists"
+    pie_title = "National Subscription Type Distribution"
+    paid_title = 'Top Songs for Paid Users'
+    free_title = 'Top Songs for Free Users'
+    chart_title = "How long are users listening in the USA?"
 else:
-    st.write("No data available for paid users.")
+    top_10_header = f"Top 10 Artists in {selected_state}"
+    pie_title = f"Subscription Type Distribution in {selected_state}"
+    paid_title = f'Top Songs for Paid Users in {selected_state}'
+    free_title = f'Top Songs for Free Users in {selected_state}'
+    chart_title = f"How long are users listening in {selected_state}?"
 
-# Top Free Artists
-free_artists = prep.top_free_artists(df=df_listen, free_status='free')
-if free_artists:
-    st.subheader("Horizontal Bar Chart of Top Artists for Free Users")
-    free_artists_df = free_artists.toPandas()
-    free_artists_df = free_artists_df.sort_values(by='count', ascending=True)
 
-    chart_free_artists = alt.Chart(free_artists_df).mark_bar().encode(
-        x=alt.X('count:Q', title='Count'),
-        y=alt.Y('artist:N', sort='-x', title='Artist'),
-        tooltip=['artist', 'count']
-    ).properties(
-        width=700,
-        height=400
+with col_table[0]:
+    with st.container(border=True):
+        # printing top ten chart
+        top_10 = engine.get_top_10_artists(df=cleaned_listen, state=selected_state)
+        st.header(top_10_header)
+        st.dataframe(top_10, hide_index=True)
+
+
+with col_table[0]:
+    with st.container(border=True):
+        # printing pie
+        pie_df = engine.create_subscription_pie_chart(df=cleaned_listen, state=selected_state)
+
+
+        chart = alt.Chart(pie_df).mark_arc().encode(
+            theta=alt.Theta(field="count", type="quantitative"),
+            color=alt.Color(field="subscription", type="nominal",
+                            scale=alt.Scale(domain=['free', 'paid'],
+                                            range=['orange', 'blue']),
+                            legend=alt.Legend(title="Subscription Type", orient="bottom")),
+            order=alt.Order(field="count", sort="descending"),
+            tooltip=["subscription", "count"]
+        ).properties(
+            title=pie_title
+        ).configure_title(
+            fontSize=25  # Adjust title font size
+        ).configure_legend(
+            titleFontSize=23,  # Adjust legend title font size
+            labelFontSize=25   # Adjust legend label font size
+        )
+        st.altair_chart(chart)
+    
+with col_table[1]:
+    with st.container(border=True):
+
+        # st.sidebar.header("Select an Artist")
+        option = st.selectbox(
+        'Filter by Artist',
+        artist_list,
+        index=None,
+        placeholder="Chosen Artist",
+        accept_new_options = True
     )
-    st.altair_chart(chart_free_artists, use_container_width=True)
-else:
-    st.write("No data available for free users.")
-
-# Top Paid Songs
-paid_songs = prep.top_paid_songs(df=df_listen, paid_status='paid')
-if paid_songs:
-    st.subheader("Horizontal Bar Chart of Top Songs for Paid Users")
-    paid_songs_df = paid_songs.toPandas()
-    paid_songs_df = paid_songs_df.sort_values(by='count', ascending=True)
-
-    chart_paid_songs = alt.Chart(paid_songs_df).mark_bar().encode(
-        x=alt.X('count:Q', title='Count'),
-        y=alt.Y('song:N', sort='-x', title='Song'),
-        tooltip=['song', 'count']
-    ).properties(
-        width=700,
-        height=400
-    )
-    st.altair_chart(chart_paid_songs, use_container_width=True)
-else:
-    st.write("No data available for paid songs.")
-
-# Top Free Songs
-free_songs = prep.top_free_songs(df=df_listen, free_status='free')
-if free_songs:
-    st.subheader("Horizontal Bar Chart of Top Songs for Free Users")
-    free_songs_df = free_songs.toPandas()
-    free_songs_df = free_songs_df.sort_values(by='count', ascending=True)
-
-    chart_free_songs = alt.Chart(free_songs_df).mark_bar().encode(
-        x=alt.X('count:Q', title='Count'),
-        y=alt.Y('song:N', sort='-x', title='Song'),
-        tooltip=['song', 'count']
-    ).properties(
-        width=700,
-        height=400
-    )
-    st.altair_chart(chart_free_songs, use_container_width=True)
-else:
-    st.write("No data available for free songs.")
 
 
+        if option == None:
+            st.write("You selected: ", option)
+        else:
+            # creating the dataframe of listens for specific artists
+            b = engine.get_artist_state_listen(df=cleaned_listen, artist=option)
 
+            # filtering data to what is needed to make map
+            c = engine.map_engine_df(df=b)
+            ## creating the maps
+            fig = go.Figure(data=go.Choropleth(
+                locations=c.state, # Spatial coordinates
+                z = c.listens, # Data to be color-coded
+                locationmode = 'USA-states', # set of locations match entries in `locations`
+                colorscale = 'Blues',
+                colorbar_title = "Number of\n Listens"
+            ))
 
+            # adding context to the map
+            fig.update_layout(
+                title=dict(
+                    text=f'Number of {option} Listens \n 2024-2025',
+                    font=dict(size=18)  # Adjust title font size
+                ),
+                geo_scope='usa',  # Limit map scope to USA
+                coloraxis_colorbar=dict(
+                    title="Number of\n Listens",
+                    titlefont=dict(size=14),  # Adjust color bar title font size
+                    tickfont=dict(size=12)    # Adjust color bar tick font size
+                )
+            )
+            st.plotly_chart(fig)
+
+with col_table[1]:
+    
+    col_free, col_paid, col_line = st.columns(3)
+    with col_paid:
+        with st.container(border=True):
+            # paid songs charts
+            st.subheader(paid_title)
+            paid_songs_df = engine.top_paid_songs(df=cleaned_listen, state=selected_state)
+
+            chart_paid_songs = alt.Chart(paid_songs_df).mark_bar().encode(
+                x=alt.X('listens:Q', title='Listens'),
+                y=alt.Y('song:N', sort='-x', title=None),
+                tooltip=['song', 'listens']
+            ).properties(
+                width=700,
+                height=400,
+            ).configure_axis(
+                labelFontSize=14 
+            )
+            st.altair_chart(chart_paid_songs, use_container_width=True)            
+
+    with col_free:
+        with st.container(border=True):
+            # free songs chart
+            st.subheader(free_title)
+            free_songs_df = engine.top_free_songs(df=cleaned_listen, state=selected_state)
+            
+            chart_free_songs = alt.Chart(free_songs_df).mark_bar().encode(
+                x=alt.X('listens:Q', title='Listens'),
+                y=alt.Y('song:N', sort='-x', title=None),
+                tooltip=['song', 'listens']
+            ).properties(
+                width=700,
+                height=400,
+            ).configure_axis(
+                labelFontSize=14 
+            )
+            st.altair_chart(chart_free_songs, use_container_width=True)
+    
+        with col_line:
+            with st.container(border=True):
+                # listen graph creation
+                listen_duration = engine.get_user_list(df=cleaned_listen, state=selected_state)
+
+                # Determine the title based on the selected state
+                if selected_state == "Nationwide":
+                    pass
+                else:
+                    pass
+                    
+                #create the line graph
+                line_fig = px.line(
+                    listen_duration,
+                    x="month_name",
+                    y="total_duration",
+                    color="subscription",
+                    title=chart_title,
+                    labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
+                        )
+                line_fig.update_layout(
+                    title=dict(
+                        text=chart_title,
+                        font=dict(size=18)  # Adjust title font size
+                    ),
+                    xaxis=dict(
+                        title=dict(text="Month", font=dict(size=14)),  # Adjust x-axis label font size
+                        tickfont=dict(size=12)  # Adjust x-axis tick font size
+                    ),
+                    yaxis=dict(
+                        title=dict(text="Total Duration (seconds)", font=dict(size=14)),  # Adjust y-axis label font size
+                        tickfont=dict(size=12)  # Adjust y-axis tick font size
+                    ),
+                    legend=dict(
+                        font=dict(size=12)  # Adjust legend font size
+                    ),
+                    hovermode="x unified"
+                )
+                # Update hovertemplate for the 'Paid' trace
+                line_fig.update_traces(
+                    selector={'name': 'paid'},
+                    hovertemplate='<span style="font-size: 18px;">' +
+                                'Paid: %{y:.2f}' +
+                                '<extra></extra>'
+                    )
+
+                # Update hovertemplate for the 'Free' trace
+                line_fig.update_traces(
+                    selector={'name': 'free'},
+                    hovertemplate='<span style="font-size: 18px;">' +
+                                'Free: %{y:.2f}' +
+                                '<extra></extra>',
+        
+                )
+
+                st.plotly_chart(line_fig)
