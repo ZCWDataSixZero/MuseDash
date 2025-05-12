@@ -67,7 +67,8 @@ with col_table[0]:
         # printing top ten chart
         top_10 = engine.get_top_10_artists(df=cleaned_listen, state=selected_state)
         st.header(top_10_header)
-        st.dataframe(top_10, hide_index=True)
+        st.dataframe(top_10, hide_index=True) 
+        #Can't change font because its rendered as a streamlit dataframe
 
 
 with col_table[0]:
@@ -114,7 +115,7 @@ with col_table[1]:
             b = engine.get_artist_state_listen(df=cleaned_listen, artist=option)
 
             # filtering data to what is needed to make map
-            c = engine.map_engine_df(df=b)
+            c = engine.map_prep_df(df=b)
             ## creating the maps
             fig = go.Figure(data=go.Choropleth(
                 locations=c.state, # Spatial coordinates
@@ -156,7 +157,7 @@ with col_table[1]:
                 width=700,
                 height=400,
             ).configure_axis(
-                labelFontSize=14 
+                labelFontSize=18 
             )
             st.altair_chart(chart_paid_songs, use_container_width=True)            
 
@@ -174,7 +175,7 @@ with col_table[1]:
                 width=700,
                 height=400,
             ).configure_axis(
-                labelFontSize=14 
+                labelFontSize=18 
             )
             st.altair_chart(chart_free_songs, use_container_width=True)
     
