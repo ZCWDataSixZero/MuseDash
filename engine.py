@@ -108,6 +108,7 @@ def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
     average_listening_time = df.select(avg("duration")).collect()[0][0]
     total_duration_sum = df.filter(df["level"] == "paid").agg(sum("duration")).collect()[0][0]
     return total_users, average_listening_time, total_duration_sum
+
 def get_user_list(df: pyspark.sql.dataframe.DataFrame, state: str) -> pd.core.frame.DataFrame:
      
      # Find the paid users
