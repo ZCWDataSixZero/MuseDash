@@ -44,7 +44,7 @@ with tab1:
         option = st.selectbox(
         'Select an Artist',
         artist_list,
-        index=None,
+        #index=None,
         placeholder="Chosen Artist",
         accept_new_options = True
     )
@@ -63,12 +63,12 @@ with tab1:
         c_max = c['listens'].max()
         c_min = c['listens'].min()
         ## creating the maps
-        fig = go.Figure(data=px.Choropleth(
+        fig = go.Figure(data=go.Choropleth(
             locations=c.state, # Spatial coordinates
             # z = c.listens, # Data to be color-coded
             locationmode = 'USA-states', # set of locations match entries in `locations`
             colorscale = 'Blues',
-            range_color=(c_min, c_max),
+            #range_color=(c_min, c_max),
             colorbar_title = "Number of\n Listens"
         ))
 
@@ -117,7 +117,14 @@ with tab1:
 
     top_10 = kunle_engine.get_top_10_artists(df=clean_listen, state=location)
     st.header(top_10_header)
-    st.dataframe(top_10, hide_index=True)
+    selected_row =st.dataframe(top_10,
+                                use_container_width=True,
+                                # selection_mode='single-row',
+                                # on_select=st.session_state,
+                                hide_index=True)
+    
+    if selected_row:
+        st.write(selected_row)
 
 
 
