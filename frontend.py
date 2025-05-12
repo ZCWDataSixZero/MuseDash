@@ -16,7 +16,7 @@ spark = SparkSession.builder \
         .getOrCreate()
 
 try:
-    df_listen = spark.read.json ('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
+    df_listen = spark.read.json ('/Users/angel/Downloads/spring25data/app/listen_events')
     print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
@@ -120,6 +120,7 @@ with st.container(border=True):
         
     with col_table[0]:
         with st.container(border=True):
+
             # printing top ten chart
             top_10 = engine.get_top_10_artists(df=cleaned_listen, state=selected_state)
             st.header(top_10_header)
@@ -128,6 +129,19 @@ with st.container(border=True):
 
     with col_table[0]:
         with st.container(border=True):
+            #Create KPIs
+            total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=df_listen)
+            col1, col2, col3 = st.columns([1.5, 2, 2.2])
+            with col1:
+                with st.container(border=True):
+                    st.metric("Total Users", "1k+")
+            with col2:
+                with st.container(border=True):
+                    st.metric("Average Total Listening", "4 MIN")
+            with col3:
+                with st.container(border=True):
+                    st.metric("Total Paid Listening", "70k+ HR")
+
             # printing pie
             pie_df = engine.create_subscription_pie_chart(df=cleaned_listen, state=selected_state)
 
@@ -147,18 +161,7 @@ with st.container(border=True):
         )
             st.altair_chart(chart)
         
-            #Create KPIs
-            total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=df_listen)
-            col1, col2, col3 = st.columns([1.5, 2, 2.2])
-            with col1:
-                with st.container(border=True):
-                    st.metric("Total Users", "1k+")
-            with col2:
-                with st.container(border=True):
-                    st.metric("Average Total Listening", "4 MIN")
-            with col3:
-                with st.container(border=True):
-                    st.metric("Total Paid Listening", "70k+ HR")
+
     
 
     with col_table[1]:
@@ -214,7 +217,17 @@ with st.container(border=True):
                         title=chart_title,
                         labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
                             )
-                    line_fig.update_layout(hovermode="x unified")
+                    line_fig.update_layout(
+                        hovermode="x unified",
+
+                        #style the hover line color
+                        xaxis=dict(
+                            spikecolor="lightgray"
+                        ),
+                        yaxis=dict(
+                            spikecolor="lightgray"
+                        )
+                                           )
 
                     # Update hovertemplate for the 'Paid' trace
                     line_fig.update_traces(
