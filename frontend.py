@@ -153,7 +153,7 @@ with st.container(border=True):
         with col1:
             st.metric("Total Users", "1k+")
         with col2:
-            st.metric("Average Listening", "4 MIN")
+            st.metric("Average Total Listening", "4 MIN")
         with col3:
             st.metric("Total Paid Listening", "70k+ HR")
         
