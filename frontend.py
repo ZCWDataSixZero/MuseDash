@@ -8,6 +8,7 @@ import altair as alt
 
 from pyspark.sql import SparkSession
 
+
 # makes page wide
 st.set_page_config(layout = 'wide')
 
@@ -18,7 +19,7 @@ spark = SparkSession.builder \
 ## Verify that SparkSession is created
 
 try:
-    df_listen = spark.read.json ('/Users/isiah/Downloads/Data/listen_events')
+    df_listen = spark.read.json ('/Users/angel/Downloads/spring25data/app/listen_events')
     print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
@@ -87,6 +88,15 @@ with st.container():
         fillOpacity=0  # Make the chart background transparent
     )
         st.altair_chart(chart)
+        #Create KPIs
+        total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=df_listen)
+        col1, col2, col3 = st.columns([1.5, 2, 2.2])
+        with col1:
+            st.metric("Total Users", "1k+")
+        with col2:
+            st.metric("Average Listening", "4 MIN")
+        with col3:
+            st.metric("Total Paid Listening", "70k+ HR")
         
     with col_table[1]:
         with st.container():
@@ -179,7 +189,7 @@ with st.container():
                     y="total_duration",
                     color="subscription",
                     title=chart_title,
-                    labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
+                    labels={"month_name": "Month", "total_duration": "Total Duration (minutes)"}
                         )
                 line_fig.update_layout(hovermode="x unified")
 

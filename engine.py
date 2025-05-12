@@ -1,6 +1,6 @@
 import pandas as pd
 import pyspark
-from pyspark.sql.functions import desc, asc, count, col, when, to_timestamp, year, month, date_format, sum, when, udf, from_unixtime
+from pyspark.sql.functions import desc, asc, avg, count, col, when, to_timestamp, year, month, date_format, sum, when, udf, from_unixtime
 from pyspark.sql.types import StringType
 
 
@@ -93,6 +93,21 @@ def top_5(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
 ############
 # angel
 ############
+
+def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
+    """
+    Calculates total users and average listening time from a PySpark DataFrame.
+
+    Args:
+        df: A PySpark DataFrame with 'user_id' and 'duration_seconds' columns.
+
+    Returns:
+        A tuple containing (total_users, average_listening_time).
+    """
+    total_users = df.select(col("userId")).distinct().count()
+    average_listening_time = df.select(avg("duration")).collect()[0][0]
+    total_duration_sum = df.filter(df["level"] == "paid").agg(sum("duration")).collect()[0][0]
+    return total_users, average_listening_time, total_duration_sum
 def get_user_list(df: pyspark.sql.dataframe.DataFrame, state: str) -> pd.core.frame.DataFrame:
      
      # Find the paid users
@@ -119,7 +134,7 @@ def get_user_list(df: pyspark.sql.dataframe.DataFrame, state: str) -> pd.core.fr
     
     # Group by year, month, subscription, and month_name, then sum the durations
     duration_grouped = updated_listening_duration.groupBy("year", "month", "month_name", "subscription") \
-            .agg(sum("duration").alias("total_duration")) \
+            .agg((sum(col("duration")) / 60).alias("total_duration")) \
             .orderBy("year", "month", "subscription")
     
     #convert to a pandas dataframe
