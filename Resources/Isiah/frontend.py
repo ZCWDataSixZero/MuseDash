@@ -147,7 +147,7 @@ with st.container(border=True):
 
         with st.container():
             # KPI metrics
-            total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=df_listen)
+            total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=cleaned_listen)
             col1, col2, col3 = st.columns([1.5, 2, 2.2])
             with col1:
                 with st.container(border=True):
