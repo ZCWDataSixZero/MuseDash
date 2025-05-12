@@ -16,7 +16,7 @@ spark = SparkSession.builder \
         .getOrCreate()
 
 try:
-    df_listen = spark.read.json ('/Users/angel/Downloads/spring25data/app/listen_events')
+    df_listen = spark.read.json ('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
     print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
@@ -128,20 +128,22 @@ with st.container(border=True):
 
 
     with col_table[0]:
+        
+        #Create KPIs
+        total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=df_listen)
+        col1, col2, col3 = st.columns([1.5, 2, 2.2])
+        with col1:
+            with st.container(border=True):
+                st.metric("Total Users", "1k+")
+        with col2:
+            with st.container(border=True):
+                st.metric("Average Total Listening", "4 MIN")
+        with col3:
+            with st.container(border=True):
+                st.metric("Total Paid Listening", "70k+ HR")
+    
+    with col_table[0]:
         with st.container(border=True):
-            #Create KPIs
-            total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=df_listen)
-            col1, col2, col3 = st.columns([1.5, 2, 2.2])
-            with col1:
-                with st.container(border=True):
-                    st.metric("Total Users", "1k+")
-            with col2:
-                with st.container(border=True):
-                    st.metric("Average Total Listening", "4 MIN")
-            with col3:
-                with st.container(border=True):
-                    st.metric("Total Paid Listening", "70k+ HR")
-
             # printing pie
             pie_df = engine.create_subscription_pie_chart(df=cleaned_listen, state=selected_state)
 
@@ -156,8 +158,11 @@ with st.container(border=True):
             tooltip=["subscription", "count"]
         ).properties(
             title=pie_title
-        ).configure_view(
-            fillOpacity=0  # Make the chart background transparent
+        ).configure_title(
+            fontSize=23 # Adjust title font size
+        ).configure_legend(
+            titleFontSize=20, # adjust legend title font size
+            labelFontSize=23  # adjust legend font size
         )
             st.altair_chart(chart)
         

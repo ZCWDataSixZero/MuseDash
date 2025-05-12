@@ -65,7 +65,7 @@ with tab1:
         ## creating the maps
         fig = go.Figure(data=go.Choropleth(
             locations=c.state, # Spatial coordinates
-            # z = c.listens, # Data to be color-coded
+            z = c.listens, # Data to be color-coded
             locationmode = 'USA-states', # set of locations match entries in `locations`
             colorscale = 'Blues',
             #range_color=(c_min, c_max),
@@ -123,8 +123,8 @@ with tab1:
                                 # on_select=st.session_state,
                                 hide_index=True)
     
-    if selected_row:
-        st.write(selected_row)
+    # if selected_row:
+    #     st.write(selected_row)
 
 
 
