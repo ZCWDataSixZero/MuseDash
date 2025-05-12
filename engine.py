@@ -175,12 +175,15 @@ def get_top_10_artists(df: pyspark.sql.dataframe.DataFrame , state: str) -> pd.c
         
 
     top_10_artists_df = filtered_df.groupBy("artist") \
-                                   .agg(count("*").alias("count")) \
-                                   .orderBy(desc("count")) \
+                                   .agg(count("*").alias("Total Streams")) \
+                                   .orderBy(desc("Total Streams")) \
                                    .limit(10) 
+    top_10_artists_df = top_10_artists_df.withColumnRenamed("artist", "Artist")
+    
+    top_10_artists_df = top_10_artists_df.toPandas().sort_values(by='Total Streams', ascending=False)
 
     #print(title + ":")
-    return top_10_artists_df.toPandas()
+    return top_10_artists_df
 
 def create_subscription_pie_chart(df: pyspark.sql.dataframe.DataFrame , state: str) -> pd.core.frame.DataFrame:
     """

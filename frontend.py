@@ -16,7 +16,7 @@ spark = SparkSession.builder \
         .getOrCreate()
 
 try:
-    df_listen = spark.read.json ('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
+    df_listen = spark.read.json ('/Users/Isiah/Downloads/Data/listen_events')
     print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
