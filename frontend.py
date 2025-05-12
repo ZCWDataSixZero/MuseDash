@@ -16,7 +16,7 @@ spark = SparkSession.builder \
         .getOrCreate()
 
 try:
-    df_listen = spark.read.json ('/Users/Isiah/Downloads/Data/listen_events')
+    df_listen = spark.read.json ('/Users/jim/Projects/p1/spring25data/Data/listen_events')
     print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
@@ -26,15 +26,15 @@ cleaned_listen = engine.clean(df=df_listen)
 artist_list = engine.get_artist_over(df=cleaned_listen,number_of_lis=1000)
 location = 'Nationwide'
 
-# # allow .css formatting
-# def local_css(file_name):
-#     with open(file_name) as f:
-#         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+# allow .css formatting
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# local_css("style.css")
+local_css("style.css")
                    
 # Streamlit Titling
-st.markdown("<h1 style='text-align: center;'>MuseDash</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='title' style='text-align: center;'>MuseDash</h1>", unsafe_allow_html=True)
 #st.title("Muse Dash")
 
 
@@ -120,51 +120,76 @@ with st.container(border=True):
         
     with col_table[0]:
         with st.container(border=True):
-
-            # printing top ten chart
+            # Printing top ten chart
             top_10 = engine.get_top_10_artists(df=cleaned_listen, state=selected_state)
             st.header(top_10_header)
-            st.dataframe(top_10, hide_index=True)
 
+            # Style the table
+            styled_top_10 = top_10.style.hide(axis="index").set_table_styles([
+                {'selector': 'td', 'props': [('font-size', '20px'), ('text-align', 'center')]},
+                {'selector': 'th', 'props': [('font-size', '20px'), ('text-align', 'center')]}
+            ])
+            st.markdown(styled_top_10.to_html(), unsafe_allow_html=True)
 
-    with col_table[0]:
-        
-        #Create KPIs
-        total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=df_listen)
-        col1, col2, col3 = st.columns([1.5, 2, 2.2])
-        with col1:
-            with st.container(border=True):
-                st.metric("Total Users", "1k+")
-        with col2:
-            with st.container(border=True):
-                st.metric("Average Total Listening", "4 MIN")
-        with col3:
-            with st.container(border=True):
-                st.metric("Total Paid Listening", "70k+ HR")
-    
-    with col_table[0]:
+        with st.container():
+            # KPI metrics
+            total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=df_listen)
+            col1, col2, col3 = st.columns([1.5, 2, 2.2])
+            with col1:
+                with st.container(border=True):
+                    st.metric("Total Users", "1k+")
+            with col2:
+                with st.container(border=True):
+                    st.metric("Average Total Listening", "4 MIN")
+            with col3:
+                with st.container(border=True):
+                    st.metric("Total Paid Listening", "70k+ HR")
+
         with st.container(border=True):
-            # printing pie
             pie_df = engine.create_subscription_pie_chart(df=cleaned_listen, state=selected_state)
 
+            # Calculate the percentage column based on 'count' column
+            total = pie_df["count"].sum()  # Calculate total count
+            pie_df["percentage"] = (pie_df["count"] / total) * 100  # Calculate percentage
 
-            chart = alt.Chart(pie_df).mark_arc().encode(
-            theta=alt.Theta(field="count", type="quantitative"),
-            color=alt.Color(field="subscription", type="nominal",
-                            scale=alt.Scale(domain=['free', 'paid'],
-                                            range=['orange', 'blue']),
-                            legend=alt.Legend(title="Subscription Type", orient="bottom")),
-            order=alt.Order(field="count", sort="descending"),
-            tooltip=["subscription", "count"]
-        ).properties(
-            title=pie_title
-        ).configure_title(
-            fontSize=23 # Adjust title font size
-        ).configure_legend(
-            titleFontSize=20, # adjust legend title font size
-            labelFontSize=23  # adjust legend font size
-        )
-            st.altair_chart(chart)
+            # Create a Pandas DataFrame for the side table
+            percentage_df = pie_df[["subscription", "percentage"]].copy()
+            percentage_df["percentage"] = percentage_df["percentage"].map("{:.1f}%".format)  # Format percentage
+            percentage_df = percentage_df.rename(columns={"subscription": "Subscription", "percentage": "Percentage"})  # Rename columns
+
+            # Create the pie chart
+            chart = alt.Chart(pie_df).mark_arc(outerRadius=120).encode(
+                theta=alt.Theta(field="count", type="quantitative"),
+                color=alt.Color(field="subscription", type="nominal",
+                                scale=alt.Scale(domain=['free', 'paid'],
+                                                range=['orange', 'blue']),
+                                legend=alt.Legend(orient="bottom")),
+                order=alt.Order(field="count", sort="descending"),
+                tooltip=[
+                    "subscription",
+                    "count",
+                    alt.Tooltip("percentage", format=".1f", title="Percentage (%)")
+                ]
+            ).properties(
+                title=pie_title
+            ).configure_view(
+                fillOpacity=0
+            ).configure_title(
+                fontSize=20,
+                font="Arial",
+                anchor="middle",  # Centered title
+                offset=0        
+            )
+
+            # Display chart
+            st.altair_chart(chart, use_container_width=True)
+
+            # Display styled table below the chart
+            styled_pie_table = percentage_df[['Subscription', 'Percentage']].style.hide(axis="index").set_table_styles([
+                {'selector': 'td', 'props': [('font-size', '16px'), ('text-align', 'left')]},
+                {'selector': 'th', 'props': [('font-size', '16px'), ('text-align', 'left')]}
+            ])
+            st.markdown(styled_pie_table.to_html(), unsafe_allow_html=True)
         
 
     
