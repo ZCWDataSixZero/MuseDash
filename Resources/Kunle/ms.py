@@ -68,7 +68,8 @@ with st.container(border=True):
 
 
             if option == None:
-                st.write("You selected: ", option)
+                with st.container():
+                    st.write("You selected: ", option)
             else:
                 # creating the dataframe of listens for specific artists
                 b = e.get_artist_state_listen(df=cleaned_listen, artist=option)
@@ -92,30 +93,30 @@ with st.container(border=True):
                 fig.update_layout(
                     title_text = f'Number of {option} Listens \n 2024-2025',
                     geo_scope='usa', # limit map scope to USA
+                    margin={"r":0,"t":0,"l":0,"b":0} # setting margins around to 0s, filling the container as much as possible
                 )
 
-                fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+                #fig.update_layout()
+
 
                 event = st.plotly_chart(fig, on_select="rerun", selection_mode=["points","box","lasso"])
 
+                # selects the dictionary where the state info is stored
                 points = event["selection"].get("points", [])
+                
+                # sets the location based on which state is clicked
                 if points:
                     first_point = points[0]
                     location = first_point['location']
-                    #st.write("You selected: ", location)
                 else:
-                    #st.write("You selected: ", 'Nationwide')
                     location = 'Nationwide'
                 
-                st.write(location)
-                
     
 
 
-                #st.plotly_chart(fig)
+              
     
     selected_state = location
-    st.write(selected_state)
     # titles depending on state selected
     if selected_state == 'Nationwide':
         top_10_header = "Top 10 National Artists"
