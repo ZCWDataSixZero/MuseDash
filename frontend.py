@@ -222,10 +222,15 @@ with st.container(border=True):
 
                         #style the hover line color
                         xaxis=dict(
+                            showspikes=True,
+                            spikemode='across',
+                            spikesnap='cursor',
+                            spikethickness=1,
                             spikecolor="lightgray"
                         ),
                         yaxis=dict(
-                            spikecolor="lightgray"
+                            showspikes=False, #turns off horizontal line
+
                         )
                                            )
 
