@@ -11,174 +11,157 @@ import time
 
 from pyspark.sql import SparkSession
 
-# makes page wide
-st.set_page_config(layout = 'wide')
+### ------------------ CACHED SETUP ------------------
 
-spark = SparkSession.builder \
-    .appName("MuseDash PySpark") \
-        .getOrCreate()
+@st.cache_resource
+def get_spark_session():
+    return SparkSession.builder.appName("Museh PySpark Learning").getOrCreate()
 
 @st.cache_resource
 def load_data():
-    url = "https://zcw-cohort-spring25.s3.us-east-2.amazonaws.com/listen_events"
-
-    try:
-        # Download the file into a temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp_file:
-            response = requests.get(url)
-            response.raise_for_status()
-            tmp_file.write(response.content)
-            tmp_file_path = tmp_file.name
-
-        # Start Spark session
-        spark = SparkSession.builder.getOrCreate()
-
-        # Load the JSON data into a Spark DataFrame
-        df_listen = spark.read.json(tmp_file_path)
-        print("Data loaded successfully from URL")
-
-    except Exception as e:
-        print(f"Error loading data: {e}")
-        df_listen = None
-
-    return df_listen
-
-df_listen = load_data()
+    return spark.read.json('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
 
 @st.cache_resource
-def cleaned():
-    cleaned_listen = engine.clean(df=df_listen)
-    return cleaned_listen
+def get_clean_data():
+    return engine.clean(df=load_data())
 
-cleaned_listen = cleaned()
+@st.cache_data
+def get_artist_list(df, threshold=1000):
+    return engine.get_artist_over_1000(df=df, number_of_lis=threshold)
 
-# formatting transforming
-cleaned_listen = engine.clean(df=df_listen)
-artist_list = engine.get_artist_over(df=cleaned_listen,number_of_lis=1000)
-location = 'Nationwide'
+@st.cache_data
+def get_top_artists_by_state(_df, state):
+    return engine.get_top_10_artists(df=_df, state=state)
 
-# # allow .css formatting
-# def local_css(file_name):
-#     with open(file_name) as f:
-#         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+@st.cache_resource
+def get_map_data(_df, artist):
+    #artist_df = e.get_artist_state_listen(df=_df, artist=artist)
+    return engine.get_artist_state(df=_df,artist=artist)
 
-# local_css("style.css")
-                   
-# Streamlit Titling
-st.markdown("<h1 style='text-align: center;'><span style='color: white;'>Muse</span><span style='color: blue;'>Dash</span></h1>", unsafe_allow_html=True)
-#st.title("Muse Dash")
+@st.cache_data
+def kpis(_df):
+    return engine.calculate_kpis(df=_df)
 
+@st.cache_data
+def user_list(_df, state):
+    return engine.get_user_list(df = _df, state=state)
 
-col_table = st.columns((5, 10), gap='medium')                                  
+@st.cache_data
+def top_paid(_df, state):
+    return engine.top_paid_songs(df=_df, state=state)
 
+@st.cache_data
+def top_free(_df, state):
+    return engine.top_free_songs(df=_df, state=state)
 
-with st.container(border=True):
+@st.cache_data
+def create_pie(_df, state):
+    return engine.create_subscription_pie_chart(df=_df, state=state)
 
+### ------------------ INITIAL STATE ------------------
 
-    with col_table[1]:
-        with st.container(border=True):
+if "option" not in st.session_state:
+    st.session_state.option = "Kings Of Leon"
 
-            option = st.selectbox(
-            'Filter by Artist',
-            artist_list,
-            #index=None,
-            placeholder="Chosen Artist",
-            accept_new_options = True
-        )
+if "location" not in st.session_state:
+    st.session_state.location = "Nationwide"
 
+### ------------------ PAGE CONFIG ------------------
+st.set_page_config(layout="wide")
+st.markdown("<h1 style='text-align: center;'><span style='color: white'>Muse</span><span style='color: #87CEEB;'>Dash</span></h1>", unsafe_allow_html=True)
 
-            if option == None:
-                with st.container():
-                    st.write("You selected: ", option)
-            else:
-                # creating the dataframe of listens for specific artists
-                b = engine.get_artist_state_listen(df=cleaned_listen, artist=option)
+tab1, tab2, tab3 = st.tabs(["Pipeline", "Dashboard", "Repo"])
 
-                # filtering data to what is needed to make map
-                c = engine.map_prep_df(df=b)
-                c_max = c['listens'].max()
-                c_min = c['listens'].min()
-                ## creating the maps
-                fig = go.Figure(data=go.Choropleth(
-                    locations=c.state, # Spatial coordinates
-                    z = c.listens, # Data to be color-coded
-                    locationmode = 'USA-states', # set of locations match entries in `locations`
-                    colorscale = 'Blues',
-                    #color = [c_min, c_max ],
-                    colorbar_title = "Number of\n Listens",
-                    
-                ))
+spark = get_spark_session()
+clean_listen = get_clean_data()
 
-                # adding context to the map
-                fig.update_layout(
-                    title_text = f'Number of {option} Listens \n 2024-2025',
-                    geo_scope='usa', # limit map scope to USA
-                    margin={"r":0,"t":0,"l":0,"b":0} # setting margins around to 0s, filling the container as much as possible
+### ------------------ MAP RENDER FUNCTION ------------------
+
+def render_map(artist):
+    c = get_map_data(clean_listen, artist)
+
+    fig = go.Figure(data=go.Choropleth(
+        locations=c.state,
+        z=c.listens,
+        locationmode='USA-states',
+        colorscale='Blues',
+        colorbar_title="Number of\n Listens"
+    ))
+
+    fig.update_layout(
+        
+        geo_scope='usa',
+        margin={"r": 0, "t": 0, "l": 0, "b": 0}
+    )
+
+    event = st.plotly_chart(fig, on_select="rerun", selection_mode=["points", "box", "lasso"])
+    points = event["selection"].get("points", [])
+
+    if points:
+        selected_state = points[0]["location"]
+        if selected_state != st.session_state.location:
+            st.session_state.location = selected_state
+            st.rerun()
+    else:
+        # If background is clicked (no state), reset to Nationwide
+        if st.session_state.location != "Nationwide":
+            st.session_state.location = "Nationwide"
+            st.rerun()
+
+### ------------------ MAIN UI: TAB 1 ------------------
+with tab1:
+    # Streamlit Titling
+    pass
+
+### ------------------ MAIN UI: TAB 2 ------------------
+with tab2:
+    # setting dashboard column layout
+    col_table = st.columns((5, 10), gap='medium')    
+
+    with st.container(border=True):
+
+        with col_table[0]:
+            with st.container(border=True):
+                # creating top 10 chart dataframe
+                top_10 = get_top_artists_by_state(clean_listen, st.session_state.location)
+                state_text = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
+                st.header(f"Top 10 Artists in {state_text}")
+                
+                # creates the box to pic artist
+                selected_row = st.dataframe(
+                    top_10,
+                    use_container_width=True,
+                    selection_mode="single-row",
+                    on_select="rerun",
+                    hide_index=True
                 )
 
-                event = st.plotly_chart(fig, on_select="rerun", selection_mode=["points","box","lasso"])
-
-                # selects the dictionary where the state info is stored
-                points = event["selection"].get("points", [])
-                
-                # sets the location based on which state is clicked
-                if points:
-                    first_point = points[0]
-                    location = first_point['location']
-                else:
-                    location = 'Nationwide'
-                
-    
-
-
-              
-    
-    selected_state = location
-    # titles depending on state selected
-    if selected_state == 'Nationwide':
-        top_10_header = "Top 10 National Artists"
-        pie_title = "National" + "\n" + "Subscriptions"
-        paid_title = 'Top Songs for Paid Users'
-        free_title = 'Top Songs for Free Users'
-        chart_title = "How long are users listening in the USA?"
-    else:
-        top_10_header = f"Top 10 Artists in {selected_state}"
-        pie_title = "Subscriptions" + "\n" + f"in {selected_state}"
-        paid_title = f'Top Songs for Paid Users in {selected_state}'
-        free_title = f'Top Songs for Free Users in {selected_state}'
-        chart_title = f"How long are users listening in {selected_state}?"
+                rows = selected_row['selection'].get("rows", [])
+                if rows:
+                    selected_artist = top_10.Artist[rows[0]]
+                    if selected_artist != st.session_state.option:
+                        st.session_state.option = selected_artist
+                        st.rerun()
+            
         
-        
-    with col_table[0]:
-        with st.container(border=True):
-            # Printing top ten chart
-            top_10 = engine.get_top_10_artists(df=cleaned_listen, state=selected_state)
-            st.header(top_10_header)
-
-            # Style the table
-            styled_top_10 = top_10.style.hide(axis="index").set_table_styles([
-                {'selector': 'td', 'props': [('font-size', '20px'), ('text-align', 'center')]},
-                {'selector': 'th', 'props': [('font-size', '20px'), ('text-align', 'center')]}
-            ])
-            st.markdown(styled_top_10.to_html(), unsafe_allow_html=True)
-
-        with st.container():
-            # KPI metrics
-            total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=df_listen)
-            col1, col2, col3 = st.columns([1.5, 2, 2.2])
-            with col1:
-                with st.container(border=True):
-                    st.metric("Total Users", "1k+")
-            with col2:
-                with st.container(border=True):
-                    st.metric("Average Total Listening", "4 MIN")
-            with col3:
-                with st.container(border=True):
-                    st.metric("Total Paid Listening", "70k+ HR")
-
-        with st.container(border=True):
+            with st.container():
+                # KPI metrics
+                kpi_data = kpis(_df=clean_listen)
+                col1, col2, col3 = st.columns([1.5, 2, 2.2])
+                with col1:
+                    with st.container(border=True):
+                        st.metric("Total Users", f'{round(kpi_data[0]/1000)}k+')
+                with col2:
+                    with st.container(border=True):
+                        st.metric("Average Total Listening", f"{round(kpi_data[1]/60)} MIN")
+                with col3:
+                    with st.container(border=True):
+                        st.metric("Total Paid Listening", f"{round(kpi_data[2]/3600000)} HR")
+            
+            with st.container(border=True):
                 # listen graph creation
-                listen_duration = engine.get_user_list(df=cleaned_listen, state=selected_state)
+                listen_duration = user_list(_df=clean_listen, state=st.session_state.location)
+                chart_state = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
                     
                 #create the line graph
                 line_fig = px.line(
@@ -186,7 +169,7 @@ with st.container(border=True):
                     x="month_name",
                     y="total_duration",
                     color="subscription",
-                    title=chart_title,
+                    title= f'How long are users listening in {chart_state}',
                     labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
                         )
                 line_fig.update_layout(
@@ -224,89 +207,101 @@ with st.container(border=True):
                 )
 
                 st.plotly_chart(line_fig)
-
-    with col_table[1]:
-        
-        col_free, col_paid, col_line = st.columns(3)
-        with col_paid:
-            with st.container(border=True):
-                # paid songs charts
-                st.subheader(paid_title)
-                paid_songs_df = engine.top_paid_songs(df=cleaned_listen, state=selected_state)
-
-                chart_paid_songs = alt.Chart(paid_songs_df).mark_bar().encode(
-                    x=alt.X('listens:Q', title='Listens'),
-                    y=alt.Y('song:N', sort='-x', title=None),
-                    tooltip=['song', 'listens']
-                ).properties(
-                    width=700,
-                    height=400,
-                ).configure_axis(
-                    labelFontSize=14 
-                )
-                st.altair_chart(chart_paid_songs, use_container_width=True)            
-
-        with col_free:
-            with st.container(border=True):
-                # free songs chart
-                st.subheader(free_title)
-                free_songs_df = engine.top_free_songs(df=cleaned_listen, state=selected_state)
                 
-                chart_free_songs = alt.Chart(free_songs_df).mark_bar().encode(
-                    x=alt.X('listens:Q', title='Listens'),
-                    y=alt.Y('song:N', sort='-x', title=None),
-                    tooltip=['song', 'listens']
-                ).properties(
-                    width=700,
-                    height=400,
-                ).configure_axis(
-                    labelFontSize=14 
-                )
-                st.altair_chart(chart_free_songs, use_container_width=True)
+        with col_table[1]:
+            with st.container(border=True):
+                st.subheader(f"Number of {st.session_state.option} Listens")
+                render_map(st.session_state.option)
         
-            with col_line:
+        
+                # state_text = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
+                # st.header(f"Top 10 Artists in {state_text}")
+            col_free, col_paid, col_line = st.columns(3)
+            with col_paid:
                 with st.container(border=True):
-                    pie_df = engine.create_subscription_pie_chart(df=cleaned_listen, state=selected_state)
+                    # paid songs charts
+                    paid_text = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
+                    st.subheader(f'Top Songs for Paid Users in {paid_text}')
+                    paid_songs_df = top_paid(_df=clean_listen, state=st.session_state.location)
 
-                    # Calculate the percentage column based on 'count' column
-                    total = pie_df["count"].sum()  # Calculate total count
-                    pie_df["percentage"] = (pie_df["count"] / total) * 100  # Calculate percentage
-
-                    # Create a Pandas DataFrame for the side table
-                    percentage_df = pie_df[["subscription", "percentage"]].copy()
-                    percentage_df["percentage"] = percentage_df["percentage"].map("{:.1f}%".format)  # Format percentage
-                    percentage_df = percentage_df.rename(columns={"subscription": "Subscription", "percentage": "Percentage"})  # Rename columns
-
-                    # Create the pie chart
-                    chart = alt.Chart(pie_df).mark_arc(outerRadius=120).encode(
-                        theta=alt.Theta(field="count", type="quantitative"),
-                        color=alt.Color(field="subscription", type="nominal",
-                                        scale=alt.Scale(domain=['free', 'paid'],
-                                                        range=['orange', 'blue']),
-                                        legend=alt.Legend(orient="bottom")),
-                        order=alt.Order(field="count", sort="descending"),
-                        tooltip=[
-                            "subscription",
-                            "count",
-                            alt.Tooltip("percentage", format=".1f", title="Percentage (%)")
-                        ]
+                    chart_paid_songs = alt.Chart(paid_songs_df).mark_bar().encode(
+                        x=alt.X('listens:Q', title='Listens'),
+                        y=alt.Y('song:N', sort='-x', title=None),
+                        tooltip=['song', 'listens']
                     ).properties(
-                        title=pie_title
-                    ).configure_view(
-                        fillOpacity=0
-                    ).configure_title(
-                        fontSize=20,
-                        font="Arial",
-                        anchor="middle",  # Centered title
-                        offset=0        
+                        width=700,
+                        height=400,
+                    ).configure_axis(
+                        labelFontSize=14 
                     )
+                    st.altair_chart(chart_paid_songs, use_container_width=True)            
 
-                    # Display chart
-                    st.altair_chart(chart, use_container_width=True)
+            with col_free:
+                with st.container(border=True):
+                    # free songs chart
+                    free_text = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
+                    st.subheader(f'Top Songs for Free Users in {free_text}')
+                    free_songs_df = top_free(_df=clean_listen, state=st.session_state.location)
+                    
+                    chart_free_songs = alt.Chart(free_songs_df).mark_bar().encode(
+                        x=alt.X('listens:Q', title='Listens'),
+                        y=alt.Y('song:N', sort='-x', title=None),
+                        tooltip=['song', 'listens']
+                    ).properties(
+                        width=700,
+                        height=400,
+                    ).configure_axis(
+                        labelFontSize=14 
+                    )
+                    st.altair_chart(chart_free_songs, use_container_width=True)
+            
+                with col_line:
+                    with st.container(border=True):
+                        pie_df = create_pie(_df=clean_listen, state=st.session_state.location)
+                        pie_state = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
 
-                    # Display styled table below the chart
-                    styled_pie_table = percentage_df[['Subscription', 'Percentage']].style.hide(axis="index").set_table_styles([
-                        {'selector': 'td', 'props': [('font-size', '20px'), ('text-align', 'left')]},
-                        {'selector': 'th', 'props': [('font-size', '20px'), ('text-align', 'left')]}
-                    ])
-                    st.markdown(styled_pie_table.to_html(), unsafe_allow_html=True)
+                        st.subheader(f"Subscriptions in {pie_state}")
+
+                        # Calculate the percentage column based on 'count' column
+                        total = pie_df["count"].sum()  # Calculate total count
+                        pie_df["percentage"] = (pie_df["count"] / total) * 100  # Calculate percentage
+
+                        # Create a Pandas DataFrame for the side table
+                        percentage_df = pie_df[["subscription", "percentage"]].copy()
+                        percentage_df["percentage"] = percentage_df["percentage"].map("{:.1f}%".format)  # Format percentage
+                        percentage_df = percentage_df.rename(columns={"subscription": "Subscription", "percentage": "Percentage"})  # Rename columns
+
+                        # Create the pie chart
+                        chart = alt.Chart(pie_df).mark_arc(outerRadius=120).encode(
+                            theta=alt.Theta(field="count", type="quantitative"),
+                            color=alt.Color(field="subscription", type="nominal",
+                                            scale=alt.Scale(domain=['free', 'paid'],
+                                                            range=['orange', 'blue']),
+                                            legend=alt.Legend(orient="bottom")),
+                            order=alt.Order(field="count", sort="descending"),
+                            tooltip=[
+                                "subscription",
+                                "count",
+                                alt.Tooltip("percentage", format=".1f", title="Percentage (%)")
+                            ]
+                        )
+
+                        with st.container():
+
+                            # Display chart
+                            st.altair_chart(chart, use_container_width=True)
+
+                            # Display styled table below the chart
+                            styled_pie_table = percentage_df[['Subscription', 'Percentage']].style.hide(axis="index").set_table_styles([
+                                {'selector': 'td', 'props': [('font-size', '20px'), ('text-align', 'left')]},
+                                {'selector': 'th', 'props': [('font-size', '20px'), ('text-align', 'left')]}
+                            ])
+                            st.markdown(styled_pie_table.to_html(), unsafe_allow_html=True)
+
+
+
+### ------------------ MAIN UI: TAB 23 ------------------
+with tab3:
+    # Streamlit Titling
+    #st.markdown("<h1 style='text-align: center;'><span style='color: white'>Muse</span><span style='color: blue;'>Dash</span></h1>", unsafe_allow_html=True)
+    pass
