@@ -137,13 +137,13 @@ with st.container(border=True):
     # titles depending on state selected
     if selected_state == 'Nationwide':
         top_10_header = "Top 10 National Artists"
-        pie_title = "National Subscription Type Distribution"
+        pie_title = "National" + "\n" + "Subscriptions"
         paid_title = 'Top Songs for Paid Users'
         free_title = 'Top Songs for Free Users'
         chart_title = "How long are users listening in the USA?"
     else:
         top_10_header = f"Top 10 Artists in {selected_state}"
-        pie_title = f"Subscription Type Distribution in {selected_state}"
+        pie_title = "Subscriptions" + "\n" + f"in {selected_state}"
         paid_title = f'Top Songs for Paid Users in {selected_state}'
         free_title = f'Top Songs for Free Users in {selected_state}'
         chart_title = f"How long are users listening in {selected_state}?"
@@ -177,53 +177,53 @@ with st.container(border=True):
                     st.metric("Total Paid Listening", "70k+ HR")
 
         with st.container(border=True):
-            pie_df = engine.create_subscription_pie_chart(df=cleaned_listen, state=selected_state)
+                # listen graph creation
+                listen_duration = engine.get_user_list(df=cleaned_listen, state=selected_state)
+                    
+                #create the line graph
+                line_fig = px.line(
+                    listen_duration,
+                    x="month_name",
+                    y="total_duration",
+                    color="subscription",
+                    title=chart_title,
+                    labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
+                        )
+                line_fig.update_layout(
+                    hovermode="x unified",
 
-            # Calculate the percentage column based on 'count' column
-            total = pie_df["count"].sum()  # Calculate total count
-            pie_df["percentage"] = (pie_df["count"] / total) * 100  # Calculate percentage
+                    #style the hover line color
+                    xaxis=dict(
+                        showspikes=True,
+                        spikemode='across',
+                        spikesnap='cursor',
+                        spikethickness=1,
+                        spikecolor="lightgray"
+                    ),
+                    yaxis=dict(
+                        showspikes=False, #turns off horizontal line
 
-            # Create a Pandas DataFrame for the side table
-            percentage_df = pie_df[["subscription", "percentage"]].copy()
-            percentage_df["percentage"] = percentage_df["percentage"].map("{:.1f}%".format)  # Format percentage
-            percentage_df = percentage_df.rename(columns={"subscription": "Subscription", "percentage": "Percentage"})  # Rename columns
+                    )
+                                        )
 
-            # Create the pie chart
-            chart = alt.Chart(pie_df).mark_arc(outerRadius=120).encode(
-                theta=alt.Theta(field="count", type="quantitative"),
-                color=alt.Color(field="subscription", type="nominal",
-                                scale=alt.Scale(domain=['free', 'paid'],
-                                                range=['orange', 'blue']),
-                                legend=alt.Legend(orient="bottom")),
-                order=alt.Order(field="count", sort="descending"),
-                tooltip=[
-                    "subscription",
-                    "count",
-                    alt.Tooltip("percentage", format=".1f", title="Percentage (%)")
-                ]
-            ).properties(
-                title=pie_title
-            ).configure_view(
-                fillOpacity=0
-            ).configure_title(
-                fontSize=20,
-                font="Arial",
-                anchor="middle",  # Centered title
-                offset=0        
-            )
+                # Update hovertemplate for the 'Paid' trace
+                line_fig.update_traces(
+                    selector={'name': 'paid'},
+                    hovertemplate='<span style="font-size: 18px;">' +
+                                'Paid: %{y:.2f}' +
+                                '<extra></extra>'
+                    )
 
-            # Display chart
-            st.altair_chart(chart, use_container_width=True)
-
-            # Display styled table below the chart
-            styled_pie_table = percentage_df[['Subscription', 'Percentage']].style.hide(axis="index").set_table_styles([
-                {'selector': 'td', 'props': [('font-size', '20px'), ('text-align', 'left')]},
-                {'selector': 'th', 'props': [('font-size', '20px'), ('text-align', 'left')]}
-            ])
-            st.markdown(styled_pie_table.to_html(), unsafe_allow_html=True)
+                # Update hovertemplate for the 'Free' trace
+                line_fig.update_traces(
+                    selector={'name': 'free'},
+                    hovertemplate='<span style="font-size: 18px;">' +
+                                'Free: %{y:.2f}' +
+                                '<extra></extra>',
         
+                )
 
-    
+                st.plotly_chart(line_fig)
 
     with col_table[1]:
         
@@ -266,50 +266,47 @@ with st.container(border=True):
         
             with col_line:
                 with st.container(border=True):
-                    # listen graph creation
-                    listen_duration = engine.get_user_list(df=cleaned_listen, state=selected_state)
-                        
-                    #create the line graph
-                    line_fig = px.line(
-                        listen_duration,
-                        x="month_name",
-                        y="total_duration",
-                        color="subscription",
-                        title=chart_title,
-                        labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
-                            )
-                    line_fig.update_layout(
-                        hovermode="x unified",
+                    pie_df = engine.create_subscription_pie_chart(df=cleaned_listen, state=selected_state)
 
-                        #style the hover line color
-                        xaxis=dict(
-                            showspikes=True,
-                            spikemode='across',
-                            spikesnap='cursor',
-                            spikethickness=1,
-                            spikecolor="lightgray"
-                        ),
-                        yaxis=dict(
-                            showspikes=False, #turns off horizontal line
+                    # Calculate the percentage column based on 'count' column
+                    total = pie_df["count"].sum()  # Calculate total count
+                    pie_df["percentage"] = (pie_df["count"] / total) * 100  # Calculate percentage
 
-                        )
-                                           )
+                    # Create a Pandas DataFrame for the side table
+                    percentage_df = pie_df[["subscription", "percentage"]].copy()
+                    percentage_df["percentage"] = percentage_df["percentage"].map("{:.1f}%".format)  # Format percentage
+                    percentage_df = percentage_df.rename(columns={"subscription": "Subscription", "percentage": "Percentage"})  # Rename columns
 
-                    # Update hovertemplate for the 'Paid' trace
-                    line_fig.update_traces(
-                        selector={'name': 'paid'},
-                        hovertemplate='<span style="font-size: 18px;">' +
-                                    'Paid: %{y:.2f}' +
-                                    '<extra></extra>'
-                        )
-
-                    # Update hovertemplate for the 'Free' trace
-                    line_fig.update_traces(
-                        selector={'name': 'free'},
-                        hovertemplate='<span style="font-size: 18px;">' +
-                                    'Free: %{y:.2f}' +
-                                    '<extra></extra>',
-            
+                    # Create the pie chart
+                    chart = alt.Chart(pie_df).mark_arc(outerRadius=120).encode(
+                        theta=alt.Theta(field="count", type="quantitative"),
+                        color=alt.Color(field="subscription", type="nominal",
+                                        scale=alt.Scale(domain=['free', 'paid'],
+                                                        range=['orange', 'blue']),
+                                        legend=alt.Legend(orient="bottom")),
+                        order=alt.Order(field="count", sort="descending"),
+                        tooltip=[
+                            "subscription",
+                            "count",
+                            alt.Tooltip("percentage", format=".1f", title="Percentage (%)")
+                        ]
+                    ).properties(
+                        title=pie_title
+                    ).configure_view(
+                        fillOpacity=0
+                    ).configure_title(
+                        fontSize=20,
+                        font="Arial",
+                        anchor="middle",  # Centered title
+                        offset=0        
                     )
 
-                    st.plotly_chart(line_fig)
+                    # Display chart
+                    st.altair_chart(chart, use_container_width=True)
+
+                    # Display styled table below the chart
+                    styled_pie_table = percentage_df[['Subscription', 'Percentage']].style.hide(axis="index").set_table_styles([
+                        {'selector': 'td', 'props': [('font-size', '20px'), ('text-align', 'left')]},
+                        {'selector': 'th', 'props': [('font-size', '20px'), ('text-align', 'left')]}
+                    ])
+                    st.markdown(styled_pie_table.to_html(), unsafe_allow_html=True)
