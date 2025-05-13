@@ -3,6 +3,7 @@
         "Choropleth",
         "colorbar",
         "colorscale",
+        "kpis",
         "locationmode",
         "selectbox"
     ],
