@@ -23,6 +23,21 @@ def get_artist_state_listen( df: pyspark.sql.dataframe.DataFrame , artist: str) 
     df = df.groupBy('artist','state').agg(count('*').alias('listens')).where(col('artist') == artist).orderBy(desc('listens'))
     return df
 
+def get_artist_state( df: pyspark.sql.dataframe.DataFrame , artist: str) -> pd.core.frame.DataFrame:
+    '''
+    Filters and aggregates a pyspark dataframe to count listens by artist and state
+
+    Args:
+        df (pyspark.sql.dataframe.DataFrame): dataframe
+        artist (str): name of the artist
+
+    Returns:
+        filtered and aggregated dataframe 
+    
+    '''
+    df = df.groupBy('artist','state').agg(count('*').alias('listens')).where(col('artist') == artist).orderBy(desc('listens'))
+    return df.toPandas()
+
 def get_artist_over(df: pyspark.sql.dataframe.DataFrame, number_of_lis: int) -> list:
     '''
     Takes in a pyspark dataframe and returns list of artists with at least a states number of listens
