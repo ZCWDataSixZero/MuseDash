@@ -191,8 +191,9 @@ with tab2:
                 st.plotly_chart(line_fig)
                 
         with col_table[1]:
-            st.subheader(f"Number of {st.session_state.option} Listens")
-            render_map(st.session_state.option)
+            with st.container(border=True):
+                st.subheader(f"Number of {st.session_state.option} Listens")
+                render_map(st.session_state.option)
 
 
 
