@@ -2,7 +2,7 @@
 
 ### The Team
 ## Connect with us
-Angelika Brown: [link](https://www.linkedin.com/in/angelikabrown/)
+Angelika Brown: https://www.linkedin.com/in/angelikabrown/
 
 Isiah Armstrong
 
