@@ -43,106 +43,157 @@ tab1, tab2 = st.tabs(["Map", "2nd for giggles"])
 map_container = st.container(border=True)
 df_container = st.container(border=True)
 
+@st.fragment
+def make_map(option):
+    
+    if 'option' not in st.session_state:
+            pass
+    else:
+        st.write("You selected: ", option)
+        # if not option:
+        #     pass
+        # else:
+        # creating the dataframe of listens for specific artists
+        b = kunle_engine.get_artist_state_listen(df=clean_listen, artist=option).toPandas()
+
+        # filtering data to what is needed to make map
+        #c = kunle_engine.map_prep_df(df=b)
+    
+        ## creating the maps
+        fig = go.Figure(data=go.Choropleth(
+            locations=b.state, # Spatial coordinates
+            z = b.listens, # Data to be color-coded
+            locationmode = 'USA-states', # set of locations match entries in `locations`
+            colorscale = 'Blues',
+            #range_color=(c_min, c_max),
+            colorbar_title = "Number of\n Listens"
+        ))
+
+        # adding context to the map
+        fig.update_layout(
+            title_text = f'Number of {option} Listens \n 2024-2025',
+            geo_scope='usa', # limit map scope to USA
+        )
+
+        fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+        event = st.plotly_chart(fig, on_select="rerun", selection_mode=["points","box","lasso"], key="chart_1")
+
+        points = event["selection"].get("points", [])
+
+        if points:
+            first_point = points[0]
+            location = first_point['location']
+            st.write("You selected: ", location)
+        else:
+            location = 'Nationwide'
+    
+    st.write(location)
+    
+    return location
+
+@st.fragment
+def make_map2(option):
+    
+    if 'option' not in st.session_state:
+            pass
+    else:
+        st.write("You selected: ", option)
+        # if not option:
+        #     pass
+        # else:
+        # creating the dataframe of listens for specific artists
+        b = kunle_engine.get_artist_state_listen(df=clean_listen, artist=option).toPandas()
+
+        # filtering data to what is needed to make map
+        #c = kunle_engine.map_prep_df(df=b)
+    
+        ## creating the maps
+        fig = go.Figure(data=go.Choropleth(
+            locations=b.state, # Spatial coordinates
+            z = b.listens, # Data to be color-coded
+            locationmode = 'USA-states', # set of locations match entries in `locations`
+            colorscale = 'Blues',
+            #range_color=(c_min, c_max),
+            colorbar_title = "Number of\n Listens"
+        ))
+
+        # adding context to the map
+        fig.update_layout(
+            title_text = f'Number of {option} Listens \n 2024-2025',
+            geo_scope='usa', # limit map scope to USA
+        )
+
+        fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+        event = st.plotly_chart(fig, on_select="rerun", selection_mode=["points","box","lasso"], key="chart_2")
+
+        points = event["selection"].get("points", [])
+
+        if points:
+            first_point = points[0]
+            location = first_point['location']
+            st.write("You selected: ", location)
+        else:
+            location = 'Nationwide'
+    
+    st.write(location)
+    
+    return location
+
+@st.fragment
+def top_10_do(location):
+    top_10 = kunle_engine.get_top_10_artists(df=clean_listen, state=location)
+    st.header("Stuff")
+    selected_row = st.dataframe(top_10,
+                                use_container_width=True,
+                                selection_mode='single-row',
+                                on_select='rerun',
+                                hide_index=True)
+    
+    row_item = selected_row['selection'].get('rows')
+    
+    if row_item:
+        artist = top_10.artist[row_item[0]]
+    else:
+        artist = 'Kings Of Leon'
+    
+    st.write(artist)
+    
+    return artist
+
+
+st.session_state.count = 0
+b = st.container(border=True)
+
 with tab1:
 
     with col_table[1]:
-        with map_container:
-            # option = st.selectbox(
-            # 'Select an Artist',
-            # artist_list,
-            # #index=None,
-            # placeholder="Chosen Artist",
-            # accept_new_options = True
-            # )
-
-            if 'option' not in st.session_state:
-                pass
+        with b:
+            if st.session_state.count == 0:
+                st.session_state.option = 'Kings Of Leon'
+                st.session_state.sc = 'Nationwide'
             else:
+                pass
 
-                st.write("You selected: ", st.session_state.option)
+            st.session_state.sc = make_map(st.session_state.option)
+            
 
-
-
-                # if not option:
-                #     pass
-                # else:
-                # creating the dataframe of listens for specific artists
-                b = kunle_engine.get_artist_state_listen(df=clean_listen, artist=st.session_state.option)
-
-                # filtering data to what is needed to make map
-                c = kunle_engine.map_prep_df(df=b)
-                c_max = c['listens'].max()
-                c_min = c['listens'].min()
-                ## creating the maps
-                fig = go.Figure(data=go.Choropleth(
-                    locations=c.state, # Spatial coordinates
-                    z = c.listens, # Data to be color-coded
-                    locationmode = 'USA-states', # set of locations match entries in `locations`
-                    colorscale = 'Blues',
-                    #range_color=(c_min, c_max),
-                    colorbar_title = "Number of\n Listens"
-                ))
-
-                # adding context to the map
-                fig.update_layout(
-                    title_text = f'Number of {st.session_state.option} Listens \n 2024-2025',
-                    geo_scope='usa', # limit map scope to USA
-                )
-
-                fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-
-                event = st.plotly_chart(fig, on_select="rerun", selection_mode=["points","box","lasso"])
-
-                points = event["selection"].get("points", [])
-                
-                #sigla = first_point["properties"].get("sigla", None)
-                #st.plotly_chart(fig)  points = event["selection"].get("points", [])
-                if points:
-                    first_point = points[0]
-                    location = first_point['location']
-                    st.write("You selected: ", location)
-                else:
-                    st.write("You selected: ", 'Nationwide')
-
-                #event = st.plotly_chart(fig, on_select="rerun", selection_mode=["points","box","lasso"])
-
-                #st.subheader("You selected: ", event)
-
-                # st.dataframe(b.toPandas(), hide_index=True)
-            # if not location:
-            #     selected_state = "Nationwide"
-            # else:
-            #     selected_state = location
-    selected_state = location
-    # titles depending on state selected
-    if selected_state == 'Nationwide' :
-        top_10_header = "Top 10 National Artists"
-        pie_title = "National Subscription Type Distribution"
-        paid_title = 'Top Songs for Paid Users'
-        free_title = 'Top Songs for Free Users'
-    else:
-        top_10_header = f"Top 10 Artists in {location}"
-        pie_title = f"Subscription Type Distribution in {location}"
-        paid_title = f'Top Songs for Paid Users in {location}'
-        free_title = f'Top Songs for Free Users in {location}'
     
     with col_table[0]:
-        with df_container:
-            top_10 = kunle_engine.get_top_10_artists(df=clean_listen, state=location)
-            st.header(top_10_header)
-            selected_row = st.dataframe(top_10,
-                                        use_container_width=True,
-                                        selection_mode='single-row',
-                                        on_select='rerun',
-                                        hide_index=True)
+        with st.container(border=True):
+            st.session_state.option = top_10_do(st.session_state.sc)
             
-            row_item = selected_row['selection'].get('rows')[0]
-            
-            if row_item:
-                st.session_state.option = top_10.artist[row_item]
-                #st.rerun()
+            with col_table[1]:
+                b.empty()
+                with b.container():
+                    st.session_state.sc = make_map2(st.session_state.option)
 
 
+           
+
+
+st.session_state.count += 1
 
 with tab2:
     option = None
