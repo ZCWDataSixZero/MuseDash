@@ -23,6 +23,8 @@ Regional differences, popularities, and other metrics; show it to us by? artist?
 
 ### * Our Pipeline
 
+![image](https://github.com/user-attachments/assets/73902ea0-59af-41b0-823e-82004129f6dd)
+
 * AWS
 * Apache Spark
 * Pandas
