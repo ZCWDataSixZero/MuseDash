@@ -26,7 +26,7 @@ Regional differences, popularities, and other metrics; show it to us by? artist?
 ![image](https://github.com/user-attachments/assets/73902ea0-59af-41b0-823e-82004129f6dd)
 
 * AWS
-* Apache Spark
+* PySpark
 * Pandas
 * Altair
 * Plotly
