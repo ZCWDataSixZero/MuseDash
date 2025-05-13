@@ -4,9 +4,6 @@ import plotly.express as px
 import kunle_engine
 import plotly.graph_objects as go
 
-# fig = px.choropleth(locations=["CA", "TX", "NY",'AK'], locationmode="USA-states", color=[1,2,3,4], scope="usa")
-
-
 # st.plotly_chart(fig)
 
 from pyspark.sql import SparkSession
@@ -28,65 +25,6 @@ clean_listen = kunle_engine.clean(df=df_listen)
 # list of artists with a certain number
 artist_list = kunle_engine.get_artist_over_1000(df=clean_listen,number_of_lis=1000)
 
-import streamlit as st
-import numpy as np
-import plotly.express as px
-import kunle_engine
-import plotly.graph_objects as go
-
-# fig = px.choropleth(locations=["CA", "TX", "NY",'AK'], locationmode="USA-states", color=[1,2,3,4], scope="usa")
-
-
-# st.plotly_chart(fig)
-
-from pyspark.sql import SparkSession
-
-spark = SparkSession.builder \
-    .appName("Museh PySpark Learning") \
-        .getOrCreate()
-
-## Verify that SparkSession is created
-
-try:
-    df_listen = spark.read.json ('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
-    print('Data loaded successfully')
-except Exception as e:
-    print(f'Error loading data: {e}')
-
-
-clean_listen = kunle_engine.clean(df=df_listen)
-# list of artists with a certain number
-artist_list = kunle_engine.get_artist_over_1000(df=clean_listen,number_of_lis=1000)
-
-import streamlit as st
-import numpy as np
-import plotly.express as px
-import kunle_engine
-import plotly.graph_objects as go
-
-# fig = px.choropleth(locations=["CA", "TX", "NY",'AK'], locationmode="USA-states", color=[1,2,3,4], scope="usa")
-
-
-# st.plotly_chart(fig)
-
-from pyspark.sql import SparkSession
-
-spark = SparkSession.builder \
-    .appName("Museh PySpark Learning") \
-        .getOrCreate()
-
-## Verify that SparkSession is created
-
-try:
-    df_listen = spark.read.json ('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
-    print('Data loaded successfully')
-except Exception as e:
-    print(f'Error loading data: {e}')
-
-
-clean_listen = kunle_engine.clean(df=df_listen)
-# list of artists with a certain number
-artist_list = kunle_engine.get_artist_over_1000(df=clean_listen,number_of_lis=1000)
 
 # Initialize session state
 if "option" not in st.session_state:
@@ -95,6 +33,7 @@ if "option" not in st.session_state:
 if "location" not in st.session_state:
     st.session_state.location = "Nationwide"
 
+@st.fragment
 def render_map(artist):
     b = kunle_engine.get_artist_state_listen(df=clean_listen, artist=artist)
     c = kunle_engine.map_prep_df(df=b)
