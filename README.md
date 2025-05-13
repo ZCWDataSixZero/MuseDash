@@ -23,7 +23,8 @@ Regional differences, popularities, and other metrics; show it to us by? artist?
 
 ### Our Pipeline
 
-![image](https://github.com/user-attachments/assets/73902ea0-59af-41b0-823e-82004129f6dd)
+![image](https://github.com/user-attachments/assets/3a09645f-0d20-4e34-b63c-0ea5b2d9cd5e)
+
 
 * AWS S3
 * PySpark
