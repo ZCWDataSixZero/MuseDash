@@ -83,32 +83,34 @@ def render_map(artist):
 ### ------------------ MAIN UI: TAB 1 ------------------
 
 with tab1:
-    with col_table[0]:
-        top_10 = get_top_artists_by_state(clean_listen, st.session_state.location)
-        state_text = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
-        st.header(f"Top 10 Artists in {state_text}")
-        
-        selected_row = st.dataframe(
-            top_10,
-            use_container_width=True,
-            selection_mode="single-row",
-            on_select="rerun",
-            hide_index=True
-        )
+    with st.container():
+        with col_table[0]:
+            top_10 = get_top_artists_by_state(clean_listen, st.session_state.location)
+            state_text = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
+            st.header(f"Top 10 Artists in {state_text}")
+            
+            selected_row = st.dataframe(
+                top_10,
+                use_container_width=True,
+                selection_mode="single-row",
+                on_select="rerun",
+                hide_index=True
+            )
 
-        rows = selected_row['selection'].get("rows", [])
-        if rows:
-            selected_artist = top_10.artist[rows[0]]
-            if selected_artist != st.session_state.option:
-                st.session_state.option = selected_artist
-                st.rerun()
+            rows = selected_row['selection'].get("rows", [])
+            if rows:
+                selected_artist = top_10.artist[rows[0]]
+                if selected_artist != st.session_state.option:
+                    st.session_state.option = selected_artist
+                    st.rerun()
 
-    with col_table[1]:
-        st.subheader(f"You selected: {st.session_state.option}")
-        render_map(st.session_state.option)
+        with col_table[1]:
+            st.subheader(f"You selected: {st.session_state.option}")
+            render_map(st.session_state.option)
 
 ### ------------------ FUN TAB ------------------
 
 with tab2:
-    if st.button("Send balloons!"):
-        st.balloons()
+    with st.container():
+        if st.button("Send balloons!"):
+            st.balloons()
