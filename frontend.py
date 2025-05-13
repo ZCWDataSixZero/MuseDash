@@ -4,6 +4,9 @@ import plotly.express as px
 import engine
 import plotly.graph_objects as go
 import altair as alt
+import requests
+import tempfile
+import time
 
 
 from pyspark.sql import SparkSession
@@ -17,13 +20,27 @@ spark = SparkSession.builder \
 
 @st.cache_resource
 def load_data():
+    url = "https://zcw-cohort-spring25.s3.us-east-2.amazonaws.com/listen_events"
 
     try:
-        df_listen = spark.read.json ('/Users/isiah/Downloads/Data/listen_events')
-        print('Data loaded successfully')
+        # Download the file into a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp_file:
+            response = requests.get(url)
+            response.raise_for_status()
+            tmp_file.write(response.content)
+            tmp_file_path = tmp_file.name
+
+        # Start Spark session
+        spark = SparkSession.builder.getOrCreate()
+
+        # Load the JSON data into a Spark DataFrame
+        df_listen = spark.read.json(tmp_file_path)
+        print("Data loaded successfully from URL")
+
     except Exception as e:
-        print(f'Error loading data: {e}')
+        print(f"Error loading data: {e}")
         df_listen = None
+
     return df_listen
 
 df_listen = load_data()
@@ -200,8 +217,8 @@ with st.container(border=True):
 
             # Display styled table below the chart
             styled_pie_table = percentage_df[['Subscription', 'Percentage']].style.hide(axis="index").set_table_styles([
-                {'selector': 'td', 'props': [('font-size', '16px'), ('text-align', 'left')]},
-                {'selector': 'th', 'props': [('font-size', '16px'), ('text-align', 'left')]}
+                {'selector': 'td', 'props': [('font-size', '20px'), ('text-align', 'left')]},
+                {'selector': 'th', 'props': [('font-size', '20px'), ('text-align', 'left')]}
             ])
             st.markdown(styled_pie_table.to_html(), unsafe_allow_html=True)
         
