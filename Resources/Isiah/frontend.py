@@ -40,15 +40,15 @@ cleaned_listen = engine.clean(df=df_listen)
 artist_list = engine.get_artist_over(df=cleaned_listen,number_of_lis=1000)
 location = 'Nationwide'
 
-# # allow .css formatting
-# def local_css(file_name):
-#     with open(file_name) as f:
-#         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+# allow .css formatting
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# local_css("style.css")
+local_css("style.css")
                    
 # Streamlit Titling
-st.markdown("<h1 style='text-align: center;'><span style='color: white;'>Muse</span><span style='color: blue;'>Dash</span></h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='title' style='text-align: center;'>MuseDash</h1>", unsafe_allow_html=True)
 #st.title("Muse Dash")
 
 
@@ -147,7 +147,7 @@ with st.container(border=True):
 
         with st.container():
             # KPI metrics
-            total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=df_listen)
+            total_users, average_listening_time, total_duration_sum = engine.calculate_kpis(df=cleaned_listen)
             col1, col2, col3 = st.columns([1.5, 2, 2.2])
             with col1:
                 with st.container(border=True):
