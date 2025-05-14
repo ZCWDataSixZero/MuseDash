@@ -123,8 +123,10 @@ def render_map(artist):
 
 ### ------------------ MAIN UI: TAB 1 ------------------
 with tab1:
-    # Streamlit Titling
-    pass
+    # Center the image using columns
+    col1, col2, col3 = st.columns([1, 8, 1])
+    with col2:
+        st.image('MuseDash_Pipeline.png', caption='Pipeline')
 
 ### ------------------ MAIN UI: TAB 2 ------------------
 with tab2:
@@ -315,6 +317,7 @@ with tab2:
 
 ### ------------------ MAIN UI: TAB 23 ------------------
 with tab3:
-    # Streamlit Titling
-    #st.markdown("<h1 style='text-align: center;'><span style='color: white'>Muse</span><span style='color: blue;'>Dash</span></h1>", unsafe_allow_html=True)
-    pass
+    # Center the image using columns
+    col1, col2, col3 = st.columns([1, 5, 1])
+    with col2:
+        st.image('MuseDash_QR.png', caption='Repo')
