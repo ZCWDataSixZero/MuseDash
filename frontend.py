@@ -159,7 +159,7 @@ with tab2:
                         st.metric("Average Total Listening", f"{round(kpi_data[1]/60)} MIN")
                 with col3:
                     with st.container(border=True):
-                        st.metric("Total Paid Listening", f"{round(kpi_data[2]/3600000)} HR")
+                        st.metric("Total Paid Listening", f"{round(kpi_data[2]/3600000)}k+ H")
             
             with st.container(border=True):
                 # listen graph creation
