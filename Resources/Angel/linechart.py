@@ -58,6 +58,13 @@ line_fig = px.line(
     labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
         )
 
+#change color of the lines
+line_fig.update_traces(
+    selector={'name': 'paid'},
+    line=dict(color='orange', width=4),
+    name='Paid'
+)
+
 line_fig.update_layout(hovermode="x unified")
 
 # Update hovertemplate for the 'Paid' trace
