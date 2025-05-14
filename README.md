@@ -23,7 +23,8 @@ Regional differences, popularities, and other metrics; show it to us by? artist?
 
 ### Our Pipeline
 
-![image](https://github.com/user-attachments/assets/3a09645f-0d20-4e34-b63c-0ea5b2d9cd5e)
+![image](https://github.com/user-attachments/assets/16e80648-9c17-4af4-8bd2-51e5f6a9bae3)
+
 
 
 * AWS S3
