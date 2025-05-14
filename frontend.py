@@ -112,8 +112,10 @@ def render_map(artist):
 
 ### ------------------ MAIN UI: TAB 1 ------------------
 with tab1:
-    # Streamlit Titling
-    st.image('MuseDash_Pipeline.png', caption='Pipeline')
+    # Center the image using columns
+    col1, col2, col3 = st.columns([1, 8, 1])
+    with col2:
+        st.image('MuseDash_Pipeline.png', caption='Pipeline')
 
 
 ### ------------------ MAIN UI: TAB 2 ------------------
@@ -305,5 +307,7 @@ with tab2:
 
 ### ------------------ MAIN UI: TAB 23 ------------------
 with tab3:
-    # Streamlit Titling
-    st.image('MuseDash_QR.png', caption='Repo')
+    # Center the image using columns
+    col1, col2, col3 = st.columns([1, 5, 1])
+    with col2:
+        st.image('MuseDash_QR.png', caption='Repo')
