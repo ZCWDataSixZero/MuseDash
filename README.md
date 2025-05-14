@@ -4,11 +4,11 @@
 ## Connect with us
 Angelika Brown: https://www.linkedin.com/in/angelikabrown/
 
-Isiah Armstrong
+Isiah Armstrong: https://www.linkedin.com/in/isiaharmstrong00/
 
-James Heller
+James Heller: https://www.linkedin.com/in/james-heller-xiii/
 
-Kunle Adeyanju
+Kunle Adeyanju: https://www.linkedin.com/in/kunleadeyanju/
 
 
 ### The Task:
