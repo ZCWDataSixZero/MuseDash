@@ -21,7 +21,7 @@ def get_spark_session():
 
 @st.cache_resource
 def load_data():
-    return spark.read.json('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
+    return spark.read.json('/Users/angel/Downloads/spring25data/app/listen_events')
 
 @st.cache_resource
 def get_clean_data():
@@ -306,5 +306,4 @@ with tab2:
 ### ------------------ MAIN UI: TAB 23 ------------------
 with tab3:
     # Streamlit Titling
-    #st.markdown("<h1 style='text-align: center;'><span style='color: white'>Muse</span><span style='color: blue;'>Dash</span></h1>", unsafe_allow_html=True)
-    pass
+    st.image('MuseDash_QR.png', caption='Repo')
