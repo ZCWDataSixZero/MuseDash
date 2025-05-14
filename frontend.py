@@ -19,7 +19,20 @@ def get_spark_session():
 
 @st.cache_resource
 def load_data():
-    return spark.read.json('/Users/kunle/Python Projects/Kunles_Muse/Data/listen_events')
+    url = "https://zcw-cohort-spring25.s3.us-east-2.amazonaws.com/listen_events"
+
+    try:
+        # Download the file into a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp_file:
+            response = requests.get(url)
+            response.raise_for_status()
+            tmp_file.write(response.content)
+            tmp_file_path = tmp_file.name
+    except Exception as e:
+         print(f"Error loading data: {e}")
+    
+    
+    return spark.read.json(tmp_file_path)
 
 @st.cache_resource
 def get_clean_data():
