@@ -29,7 +29,10 @@ def get_top_artists_by_state(_df, state):
 def get_map_data(_df, artist):
     artist_df = kunle_engine.get_artist_state_listen(df=_df, artist=artist)
     return kunle_engine.map_prep_df(df=artist_df)
-
+ ###################################################
+@st.cache_data
+def kpis(df):
+    return e.calculate_kpis(df = df)
 ### ------------------ INITIAL STATE ------------------
 
 if "option" not in st.session_state:
