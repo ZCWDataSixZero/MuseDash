@@ -177,6 +177,8 @@ with tab2:
                     title= f'How long are users listening in {chart_state}',
                     labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
                         )
+                
+                
                 line_fig.update_layout(
                     hovermode="x unified",
 
@@ -209,6 +211,19 @@ with tab2:
                                 'Free: %{y:.2f}' +
                                 '<extra></extra>',
         
+                )
+
+
+                 #change color of the lines
+                line_fig.update_traces(
+                selector={'name': 'paid'},
+                line=dict(color='orange', width=4),
+                name='Paid'
+                )
+                line_fig.update_traces(
+                selector={'name': 'free'},
+                line=dict(color='red', width=4),
+                name='Free'
                 )
 
                 st.plotly_chart(line_fig)
