@@ -21,6 +21,9 @@ Regional differences, popularities, and other metrics; show it to us by? artist?
 
 ## Our Solution
 
+![Screenshot 2025-05-16 at 11 48 39 AM](https://github.com/user-attachments/assets/faabcfe6-4ee9-4b54-9fc8-7059eb6600b1)
+
+
 ### Our Pipeline
 
 ![image](https://github.com/user-attachments/assets/16e80648-9c17-4af4-8bd2-51e5f6a9bae3)
