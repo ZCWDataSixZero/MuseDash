@@ -62,6 +62,7 @@ b['month_number'] = b['month_name'].map(month_mapping)
 
 #create the slider
 month_slider = st.slider(
+  
     label="Select range of months",
     min_value=1,
     max_value=12,
