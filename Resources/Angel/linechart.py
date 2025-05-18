@@ -48,9 +48,36 @@ if selected_state == "All":
 else:
     chart_title = f"How long are users listening in {selected_state}?"
 
-#create the line chart
+# Define order of months
+month_order_list = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+]
+
+#dict comprehension to create a dictionary for month mapping
+month_mapping = {month: i + 1 for i, month in enumerate(month_order_list)}
+
+# Create a new column 'month_number' giving each month a number in the dataframe
+b['month_number'] = b['month_name'].map(month_mapping)
+
+#create the slider
+month_slider = st.slider(
+    label="Select range of months",
+    min_value=1,
+    max_value=12,
+    value=(5, 12), #slider starts at May and ends at December
+    format="%i" #display as integer
+)
+
+#grab selected month numbers
+start_month, end_month = month_slider
+
+#Filter the DataFrame based on the selected month range
+filtered_b = b[(b['month_number'] >= start_month) & (b['month_number'] <= end_month)]
+
+#create the line chart with filtered dataframe
 line_fig = px.line(
-    b,
+    filtered_b,
     x="month_name",
     y="total_duration",
     color="subscription",
