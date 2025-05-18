@@ -67,7 +67,9 @@ month_slider = st.slider(
     min_value=1,
     max_value=12,
     value=(5, 12), #slider starts at May and ends at December
-    format="%i" #display as integer
+    format="%i",  #display as integer
+    label_visibility="visible",
+    help="Starting from May to December"
 )
 
 #grab selected month numbers
