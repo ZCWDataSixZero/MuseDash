@@ -5,7 +5,7 @@ import streamlit as st
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import col, when, to_timestamp, year, month, date_format, sum, avg, when, udf, from_unixtime, countDistinct
-
+from transformers import pipeline
 
 
 def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
@@ -119,6 +119,15 @@ def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
             .withColumn("month_name", date_format(col("ts"), "MMMM"))
 
     return df
+
+@st.cache_resource
+def load_summarizer():
+    summarizer = pipeline(
+        "summarization",
+        model="bart-large-cnn"
+    )
+    return summarizer
+summarizer = load_summarizer()
 
 
 

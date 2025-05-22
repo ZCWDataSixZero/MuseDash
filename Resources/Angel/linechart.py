@@ -4,6 +4,7 @@ import plotly.express as px
 import angelmethod
 import plotly.graph_objects as go
 from pyspark.sql import SparkSession
+from transformers import pipeline
 
 spark = SparkSession.builder \
     .appName("Museh PySpark Learning") \
@@ -113,4 +114,12 @@ line_fig.update_traces(
                   '<extra></extra>',
   
 )
+if not filtered_b.empty:
+    summary_inpute_text = ""
+    for index, row in filtered_b.iterrows():
+        summary_inpute_text += f"{row['month_name']}: Total duration was {row['total_duration']:.2f} seconds for {row['subscription']} users. "
+
 st.plotly_chart(line_fig)
+
+
+
