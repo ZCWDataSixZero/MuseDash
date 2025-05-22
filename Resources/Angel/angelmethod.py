@@ -6,6 +6,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import col, when, to_timestamp, year, month, date_format, sum, avg, when, udf, from_unixtime, countDistinct
 from transformers import pipeline
+import torch
 
 
 def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
