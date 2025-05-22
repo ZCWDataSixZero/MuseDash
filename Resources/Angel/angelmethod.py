@@ -124,7 +124,7 @@ def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
 def load_summarizer():
     summarizer = pipeline(
         "summarization",
-        model="bart-large-cnn"
+        model="facebook/bart-large-cnn"
     )
     return summarizer
 summarizer = load_summarizer()
