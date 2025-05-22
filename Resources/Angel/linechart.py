@@ -125,7 +125,7 @@ if not filtered_b.empty:
     if summary_input_text:
         st.subheader("AI Summarization of Listening Data")
         try:
-            summary_output = summarizer(summary_input_text, max_length=150, min_length=30, do_sample=False)[0]['summary_text']
+            summary_output = summarizer(summary_input_text, max_length=40, min_length=23, do_sample=False)[0]['summary_text']
             st.write(summary_output)
         except Exception as e:
             st.write(f"Error generating summary: {e}")
