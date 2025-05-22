@@ -121,8 +121,8 @@ line_fig.update_traces(
 if not filtered_b.empty:
     summary_input_text = ""
     for index, row in filtered_b.iterrows():
-        summary_inpute_text += f"{row['month_name']}: Total duration was {row['total_duration']:.2f} seconds for {row['subscription']} users. "
-    if summary_inpute_text:
+        summary_input_text += f"{row['month_name']}: Total duration was {row['total_duration']:.2f} seconds for {row['subscription']} users. "
+    if summary_input_text:
         st.subheader("AI Summarization of Listening Data")
         try:
             summary_output = summarizer(summary_input_text, max_length=150, min_lenght=30, do_sample=False)[0]['summary_text']
