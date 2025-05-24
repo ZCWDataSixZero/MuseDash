@@ -5,7 +5,7 @@ import streamlit as st
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import col, when, to_timestamp, year, month, date_format, sum, avg, when, udf, from_unixtime, countDistinct
-from transformers import pipeline
+from transformers import T5Tokenizer, T5ForConditionalGeneration
 import torch
 
 
@@ -30,13 +30,18 @@ def dataframe_to_prompt(df):
     #convert to pandas dataframe
     df = df.toPandas()
     table_str = df.to_csv(index=False)
-    prompt = (
-        "Given the following table data, generate a brief summary describing:\n"
-        "- Total listening time\n"
-        "- Average session length\n"
-        "- Most listened-to track\n\n"
-        f"Table:\n{table_str}\nSummary:"
-    )
+    prompt = f"""
+            You are an AI assistant. Read the following listening history table and generate a short, natural language summary.
+
+            Instructions:
+            - Total listening time (in hours) for each subscription level
+            - The most popular month for paid users
+
+            Data:
+            {table_str}
+
+            Summary:
+            """
     return prompt
 
 # def get_summaries(df):

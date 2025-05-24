@@ -3,10 +3,10 @@ import streamlit as st
 import numpy as np
 import plotly.express as px
 import angelmethod 
-from angelmethod import dataframe_to_prompt
+from angelmethod import get_prompt
 import plotly.graph_objects as go
 from pyspark.sql import SparkSession
-from transformers import pipeline
+from transformers import T5Tokenizer, T5ForConditionalGeneration
 import torch
 
 # Initialize the summarizer pipeline
@@ -153,18 +153,26 @@ st.plotly_chart(line_fig)
 #         st.error("Failed to load the summarization model. Please try again later.")
 
 
-prompt_text = dataframe_to_prompt(df=a)
+prompt_text = get_prompt(df=a)
 
+# Load model and tokenizer
 @st.cache_resource
-def load_model():
-    return pipeline("text2text-generation", model="mrm8488/t5-base-finetuned-wikiSQL", device=-1)
+def load_flan_model():
+    tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-large")
+    model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-large")
+    return tokenizer, model
 
+# Generate summary
 try:
-    summarizer = load_model()
-    with st.spinner("Generating summary..."):
-        outputs = summarizer(prompt_text, max_length=128, do_sample=False)
-        summary = outputs[0]["generated_text"]
+    tokenizer, model = load_flan_model()
+
+    with st.spinner("Generating summary with FLAN-T5..."):
+        inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
+        outputs = model.generate(**inputs, max_length=200)
+        summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
     st.subheader("🧠 AI-Generated Summary")
     st.write(summary)
+
 except Exception as e:
-    st.error(f"Error: {e}")
+    st.error(f"❌ Error: {e}")
