@@ -25,15 +25,16 @@ def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
     return total_users, average_listening_time, total_duration_sum
 
 def get_summaries(df):
-    csv_text = df.to_csv(index=False)
+    df_pandas = df.toPandas()
+    csv_text = df_pandas.to_csv(index=False)
     prompt = f"""
-    Summarize the following listening data in natural language. Include:
+        Summarize the following listening data in natural language. Include:
         - Total listening time in hours and minutes
         - Average session length
         - Most listened-to track and its total time
 
         Data:
-            {csv_text}
+        {csv_text}
         """
     return prompt
 
