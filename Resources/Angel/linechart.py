@@ -1,7 +1,8 @@
 import streamlit as st
 import numpy as np
 import plotly.express as px
-import angelmethod
+import angelmethod 
+from angelmethod import get_summaries
 import plotly.graph_objects as go
 from pyspark.sql import SparkSession
 from transformers import pipeline
@@ -118,22 +119,34 @@ line_fig.update_traces(
                   '<extra></extra>',
   
 )
-if not filtered_b.empty:
-    summary_input_text = ""
-    for index, row in filtered_b.iterrows():
-        summary_input_text += f"{row['month_name']}: Total duration was {row['total_duration']:.2f} seconds for {row['subscription']} users. "
-    if summary_input_text:
-        st.subheader("AI Summarization of Listening Data")
-        try:
-            summary_output = summarizer(summary_input_text, max_length=40, min_length=23, do_sample=False)[0]['summary_text']
-            st.write(summary_output)
-        except Exception as e:
-            st.write(f"Error generating summary: {e}")
-    else:
-        st.write("No data available for the selected months.")
-else:
-    st.info("Please select a valid month range.")
+# if not filtered_b.empty:
+#     summary_input_text = ""
+#     for index, row in filtered_b.iterrows():
+#         summary_input_text += f"{row['month_name']}: Total duration was {row['total_duration']:.2f} seconds for {row['subscription']} users. "
+#     if summary_input_text:
+#         st.subheader("AI Summarization of Listening Data")
+#         try:
+#             summary_output = summarizer(summary_input_text, max_length=40, min_length=23, do_sample=False)[0]['summary_text']
+#             st.write(summary_output)
+#         except Exception as e:
+#             st.write(f"Error generating summary: {e}")
+#     else:
+#         st.write("No data available for the selected months.")
+# else:
+#     st.info("Please select a valid month range.")
 st.plotly_chart(line_fig)
 
+# Summarization
 
+text_summary = get_summaries(df=a)
 
+with st.spinner("Summarizing..."):
+    try:
+        summarizer = pipeline("summarization", model="t5-small", device=-1)
+        print("Model loaded successfully!")
+        summary = summarizer(text_summary, max_length=30, min_length=25, do_sample=False)[0]['summary_text']
+        st.write(summary)
+        st.subheader("Summarized by AI")
+    except Exception as e:
+        st.write(f"Error generating summary: {e}")
+        st.error("Failed to load the summarization model. Please try again later.")

@@ -24,6 +24,35 @@ def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
     total_duration_sum = df.filter(df["level"] == "paid").agg(sum("duration")).collect()[0][0]
     return total_users, average_listening_time, total_duration_sum
 
+def get_summaries(df):
+    csv_text = df.to_csv(index=False)
+    prompt = f"""
+    Summarize the following listening data in natural language. Include:
+        - Total listening time in hours and minutes
+        - Average session length
+        - Most listened-to track and its total time
+
+        Data:
+            {csv_text}
+        """
+    return prompt
+
+# def get_summaries(df):
+#     free_total = df.filter(col("subscription") == "free").agg({"duration": "sum"}).collect()[0][0]
+#     paid_total = df.filter(col("subscription") == "paid").agg({"duration": "sum"}).collect()[0][0]
+#     max_month_paid = df.filter(col("subscription") == "paid").agg({"month": "max"}).collect()[0][0]
+   
+  
+    
+
+#     text_summary = (
+#         f"In 2024, the total listening time for paid users was {round(paid_total / 60, 2)} hours,"
+#         f"while free users had a total of {round(free_total / 60, 2)} hours. "
+#         f"The most popular month of paid users was {max_month_paid}."
+
+#     )
+#     return text_summary
+
 
 def get_user_list(df: pyspark.sql.dataframe.DataFrame, selected_states = None) -> pd.core.frame.DataFrame:
     '''
@@ -121,14 +150,14 @@ def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
 
     return df
 
-@st.cache_resource
-def load_summarizer():
-    summarizer = pipeline(
-        "summarization",
-        model="facebook/bart-large-cnn"
-    )
-    return summarizer
-summarizer = load_summarizer()
+# @st.cache_resource
+# def load_summarizer():
+#     summarizer = pipeline(
+#         "summarization",
+#         model="facebook/bart-large-cnn"
+#     )
+#     return summarizer
+# summarizer = load_summarizer()
 
 
 
