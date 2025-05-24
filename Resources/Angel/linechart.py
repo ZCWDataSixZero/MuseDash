@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 import numpy as np
 import plotly.express as px
@@ -138,15 +139,45 @@ st.plotly_chart(line_fig)
 
 # Summarization
 
-text_summary = get_summaries(df=a)
+# text_summary = get_summaries(df=a)
 
-with st.spinner("Summarizing..."):
+# with st.spinner("Summarizing..."):
+#     try:
+#         summarizer = pipeline("summarization", model="t5-small", device=-1)
+#         print("Model loaded successfully!")
+#         summary = summarizer(text_summary, max_length=30, min_length=25, do_sample=False)[0]['summary_text']
+#         st.write(summary)
+#         st.subheader("Summarized by AI")
+#     except Exception as e:
+#         st.write(f"Error generating summary: {e}")
+#         st.error("Failed to load the summarization model. Please try again later.")
+
+
+uploaded_file = st.file_uploader("Upload your listening data CSV", type="csv")
+
+if uploaded_file:
     try:
-        summarizer = pipeline("summarization", model="t5-small", device=-1)
-        print("Model loaded successfully!")
-        summary = summarizer(text_summary, max_length=30, min_length=25, do_sample=False)[0]['summary_text']
-        st.write(summary)
-        st.subheader("Summarized by AI")
+        # Step 5: Load CSV into DataFrame
+        df = pd.read_csv(uploaded_file)
+        st.write("### Uploaded Data", df)
+
+        # Step 6: Generate the prompt text for the model
+        prompt_text = get_summaries(df)
+
+        # Step 7: Load the Hugging Face pipeline (cache to speed up reloads)
+        @st.cache_resource
+        def load_model():
+            return pipeline("text2text-generation", model="ibm/fine-tuned-tabular-to-text", device=-1)
+        
+        summarizer = load_model()
+
+        # Step 8: Generate the summary with a spinner
+        with st.spinner("Generating AI summary..."):
+            result = summarizer(prompt_text, max_length=256, do_sample=False)[0]['generated_text']
+
+        # Step 9: Show the summary
+        st.subheader("🧠 AI-Generated Summary")
+        st.write(result)
+
     except Exception as e:
-        st.write(f"Error generating summary: {e}")
-        st.error("Failed to load the summarization model. Please try again later.")
+        st.error(f"❌ Error: {e}")
