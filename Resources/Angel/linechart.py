@@ -3,7 +3,7 @@ import streamlit as st
 import numpy as np
 import plotly.express as px
 import angelmethod 
-from angelmethod import get_summaries
+from angelmethod import dataframe_to_prompt
 import plotly.graph_objects as go
 from pyspark.sql import SparkSession
 from transformers import pipeline
@@ -153,18 +153,18 @@ st.plotly_chart(line_fig)
 #         st.error("Failed to load the summarization model. Please try again later.")
 
 
-prompt_text = get_summaries(df=a)
+prompt_text = dataframe_to_prompt(df=a)
 
-# Step 3: Load the model and generate summary
 @st.cache_resource
 def load_model():
-    return pipeline("text2text-generation", model="ibm/fine-tuned-tabular-to-text", device=-1)
+    return pipeline("text2text-generation", model="mrm8488/t5-base-finetuned-wikiSQL", device=-1)
 
 try:
     summarizer = load_model()
-    with st.spinner("Generating AI summary..."):
-        summary_result = summarizer(prompt_text, max_length=256, do_sample=False)[0]['generated_text']
+    with st.spinner("Generating summary..."):
+        outputs = summarizer(prompt_text, max_length=128, do_sample=False)
+        summary = outputs[0]["generated_text"]
     st.subheader("🧠 AI-Generated Summary")
-    st.write(summary_result)
+    st.write(summary)
 except Exception as e:
-    st.error(f"Error loading model or generating summary: {e}")
+    st.error(f"Error: {e}")
