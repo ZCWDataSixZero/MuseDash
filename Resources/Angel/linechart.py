@@ -3,10 +3,10 @@ import streamlit as st
 import numpy as np
 import plotly.express as px
 import angelmethod 
-from angelmethod import get_prompt
+from angelmethod import dataframe_to_prompt
 import plotly.graph_objects as go
 from pyspark.sql import SparkSession
-from transformers import T5Tokenizer, T5ForConditionalGeneration
+from transformers import pipeline, T5Tokenizer, T5ForConditionalGeneration
 import torch
 
 # Initialize the summarizer pipeline
@@ -153,7 +153,7 @@ st.plotly_chart(line_fig)
 #         st.error("Failed to load the summarization model. Please try again later.")
 
 
-prompt_text = get_prompt(df=a)
+prompt_text = dataframe_to_prompt(df=b)
 
 # Load model and tokenizer
 @st.cache_resource

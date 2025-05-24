@@ -28,7 +28,7 @@ def dataframe_to_prompt(df):
     # Convert DataFrame to a string representation for prompt
 
     #convert to pandas dataframe
-    df = df.toPandas()
+    
     table_str = df.to_csv(index=False)
     prompt = f"""
             You are an AI assistant. Read the following listening history table and generate a short, natural language summary.
