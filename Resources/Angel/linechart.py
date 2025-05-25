@@ -9,8 +9,11 @@ from pyspark.sql import SparkSession
 from transformers import pipeline, T5Tokenizer, T5ForConditionalGeneration
 import torch
 
-# Initialize the summarizer pipeline
-summarizer = pipeline("summarization")
+@st.cache_resource
+def load_flan_model():
+    tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-large")
+    model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-large")
+    return tokenizer, model
 
 spark = SparkSession.builder \
     .appName("Museh PySpark Learning") \
@@ -73,7 +76,7 @@ month_slider = st.slider(
     label="Select a range of months",
     min_value=1,
     max_value=12,
-    value=(5, 12), #slider starts at May and ends at December
+    value=(1, 12), #slider starts at May and ends at December
     format="%i",  #display as integer
     label_visibility="visible",
     help="Add or remove months to filter listening data",
@@ -84,6 +87,9 @@ start_month, end_month = month_slider
 
 #Filter the DataFrame based on the selected month range
 filtered_b = b[(b['month_number'] >= start_month) & (b['month_number'] <= end_month)]
+
+st.write("Preview of filtered data going into summary:")
+st.dataframe(filtered_b.head())
 
 #create the line chart with filtered dataframe
 line_fig = px.line(
@@ -153,26 +159,22 @@ st.plotly_chart(line_fig)
 #         st.error("Failed to load the summarization model. Please try again later.")
 
 
-prompt_text = dataframe_to_prompt(df=b)
 
-# Load model and tokenizer
-@st.cache_resource
-def load_flan_model():
-    tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-large")
-    model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-large")
-    return tokenizer, model
+
+
 
 # Generate summary
-try:
+if not filtered_b.empty:
+    prompt_text = dataframe_to_prompt(filtered_b)
+
     tokenizer, model = load_flan_model()
 
-    with st.spinner("Generating summary with FLAN-T5..."):
+    with st.spinner("Generating summary..."):
         inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-        outputs = model.generate(**inputs, max_length=200)
+        outputs = model.generate(**inputs, max_length=500)
         summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
     st.subheader("🧠 AI-Generated Summary")
     st.write(summary)
-
-except Exception as e:
-    st.error(f"❌ Error: {e}")
+else:
+    st.info("No listening data available to summarize.")

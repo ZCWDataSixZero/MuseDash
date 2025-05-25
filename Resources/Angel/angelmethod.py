@@ -24,25 +24,7 @@ def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
     total_duration_sum = df.filter(df["level"] == "paid").agg(sum("duration")).collect()[0][0]
     return total_users, average_listening_time, total_duration_sum
 
-def dataframe_to_prompt(df):
-    # Convert DataFrame to a string representation for prompt
 
-    #convert to pandas dataframe
-    
-    table_str = df.to_csv(index=False)
-    prompt = f"""
-            You are an AI assistant. Read the following listening history table and generate a short, natural language summary.
-
-            Instructions:
-            - Total listening time (in hours) for each subscription level
-            - The most popular month for paid users
-
-            Data:
-            {table_str}
-
-            Summary:
-            """
-    return prompt
 
 # def get_summaries(df):
 #     free_total = df.filter(col("subscription") == "free").agg({"duration": "sum"}).collect()[0][0]
@@ -128,6 +110,8 @@ def fix_multiple_encoding(text):
     return original_text
 
 
+
+
 def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFrame:
     '''
         Cleans the dataframe -- fixes encoding issue, adding filtering needed columns, turning 'ts' column into a readable timestamp
@@ -167,4 +151,27 @@ def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
 # summarizer = load_summarizer()
 
 
+def dataframe_to_prompt(df):
+    if df.empty:
+        return None  # Signal to skip summary
 
+    df_small = df.head(10)
+    table_str = df_small.to_string(index=False)
+
+    if not table_str.strip():
+        return None  # Also empty after conversion
+
+    prompt = f"""
+You are an AI data analyst. You are given a table of monthly listening stats. Write a **natural language summary** that includes:
+- 📊 Total listening duration across all months
+- 📅 The month with the highest listening time
+- 🆓 Differences between free and paid subscriptions (if visible)
+
+Avoid just listing column names. Write a brief narrative like you'd present in a meeting.
+
+Table:
+{table_str}
+
+Summary:
+"""
+    return prompt.strip()
