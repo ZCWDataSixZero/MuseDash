@@ -33,22 +33,42 @@ def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
 
 
 
-# def get_summaries(df):
-#     free_total = df.filter(col("subscription") == "free").agg({"duration": "sum"}).collect()[0][0]
-#     paid_total = df.filter(col("subscription") == "paid").agg({"duration": "sum"}).collect()[0][0]
-#     max_month_paid = df.filter(col("subscription") == "paid").agg({"month": "max"}).collect()[0][0]
-   
-  
-    
+def build_prompt_from_dataframe(df):
+    if df.empty:
+        return "No listening data available to summarize."
 
-#     text_summary = (
-#         f"In 2024, the total listening time for paid users was {round(paid_total / 60, 2)} hours,"
-#         f"while free users had a total of {round(free_total / 60, 2)} hours. "
-#         f"The most popular month of paid users was {max_month_paid}."
+    # Convert total_duration to numeric
+    df["total_duration"] = pd.to_numeric(df["total_duration"], errors="coerce")
 
-#     )
-#     return text_summary
+    total_duration_all = df["total_duration"].sum()
+    max_row = df.loc[df["total_duration"].idxmax()]
+    max_month = max_row["month_name"]
+    max_subscription = max_row["subscription"]
+    max_duration = max_row["total_duration"]
 
+    min_row = df.loc[df["total_duration"].idxmin()]
+    min_month = min_row["month_name"]
+    min_subscription = min_row["subscription"]
+    min_duration = min_row["total_duration"]
+    avg_min = df[df["month_name"] == min_month]["total_duration"].mean()
+
+    breakdown = df[df["month_name"] == max_month].groupby("subscription")["total_duration"].sum().to_dict()
+
+    breakdown_str = "; ".join([f"{k}: {v:.2f}" for k, v in breakdown.items()])
+
+    prompt = f"""
+                You are analyzing streaming data.
+
+                Here are the facts:
+                - Total listening duration across all selected months: {total_duration_all:.2f} seconds.
+                - Month with highest listening: {max_month} ({max_subscription}) with {max_duration:.2f} seconds.
+                - Month with lowest listening: {min_month} ({min_subscription}) with {min_duration:.2f} seconds.
+                - Average duration in {min_month}: {avg_min:.2f} seconds.
+                - In {max_month}, total duration by subscription: {breakdown_str}.
+
+                Write a clear summary of the listening behavior based on this information.
+                """
+    return prompt.strip()
 
 def get_user_list(df: pyspark.sql.dataframe.DataFrame, selected_states = None) -> pd.core.frame.DataFrame:
     '''
@@ -148,39 +168,34 @@ def clean(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFra
 
     return df
 
-# @st.cache_resource
-# def load_summarizer():
-#     summarizer = pipeline(
-#         "summarization",
-#         model="facebook/bart-large-cnn"
-#     )
-#     return summarizer
-# summarizer = load_summarizer()
 
 
-def dataframe_to_prompt(df):
-    if df.empty:
-        return None  # Signal to skip summary
+# def dataframe_to_prompt(df):
+#     if df.empty:
+#         return None  # Signal to skip summary
 
-    df_small = df.head(10)
-    table_str = df_small.to_string(index=False)
+#     df_small = df.head(10)
+#     table_str = df_small.to_string(index=False)
 
-    if not table_str.strip():
-        return None  # Also empty after conversion
+#     if not table_str.strip():
+#         return None  # Also empty after conversion
 
-    prompt = f"""
-You are an AI data analyst. You are given a table of monthly listening stats. Write a **natural language summary** that includes:
-- Most popular month of free and paid users. 
-- Give me the Average total_duration of paid users.
-- The least popular month of paid users.
-- The total number of paid users.
+#     prompt = f"""
+# You are an analytics assistant.
+
+# Here is monthly listening data for users (free and paid):
+
+# {table_str}
+
+# Please write a clear summary including:
+# - Total listening duration per subscription type.
+# - The month with the highest listening duration.
+# - Average listening duration over the months.
+# - Insights on the months May, June, and July.
+
+# Use natural language. Avoid listing columns or repeating phrases.
 
 
-Avoid just listing column names. Write a brief narrative like you'd present in a meeting.
-
-Table:
-{table_str}
-
-Summary:
-"""
-    return prompt.strip()
+# Summary:
+# """
+#     return prompt.strip()

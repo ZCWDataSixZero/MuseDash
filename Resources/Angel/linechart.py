@@ -3,7 +3,7 @@ import streamlit as st
 import numpy as np
 import plotly.express as px
 import angelmethod 
-from angelmethod import dataframe_to_prompt, load_flan_model
+from angelmethod import build_prompt_from_dataframe, load_flan_model
 import plotly.graph_objects as go
 from pyspark.sql import SparkSession
 from transformers import pipeline, T5Tokenizer, T5ForConditionalGeneration
@@ -159,20 +159,23 @@ st.plotly_chart(line_fig)
 
 
 
-
+try:
 # Load model after Spark and data prep
-tokenizer, model = load_flan_model()
+    tokenizer, model = load_flan_model()
 
     # Generate summary prompt
-if not filtered_b.empty:
-        prompt_text = dataframe_to_prompt(filtered_b)
-        
-        # Tokenize and generate summary
-        inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-        outputs = model.generate(**inputs, max_length=300, min_length=150, num_beams=4, early_stopping=True)
-        summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    if not filtered_b.empty:
+        prompt_text = build_prompt_from_dataframe(filtered_b)
+        with st.spinner("Generating summary..."):   
+            # Tokenize and generate summary
+            inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
+            outputs = model.generate(**inputs, max_length=200, min_length=150, do_sample=True, top_p=0.95, top_k=50, early_stopping=True)
+            summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-        st.subheader("AI-Generated Summary")
-        st.write(summary)
-else:
-        st.info("No data available to summarize for selected filters.")
+            st.subheader("AI-Generated Summary")
+            st.write(summary)
+    else:
+            st.info("No data available to summarize for selected filters.")
+except Exception as e:
+    st.error(f"Error loading model or generating summary: {e}")
+    st.write("Please check your model and data.")
