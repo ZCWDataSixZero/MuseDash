@@ -3,17 +3,13 @@ import streamlit as st
 import numpy as np
 import plotly.express as px
 import angelmethod 
-from angelmethod import dataframe_to_prompt
+from angelmethod import dataframe_to_prompt, load_flan_model
 import plotly.graph_objects as go
 from pyspark.sql import SparkSession
 from transformers import pipeline, T5Tokenizer, T5ForConditionalGeneration
 import torch
 
-@st.cache_resource
-def load_flan_model():
-    tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-large")
-    model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-large")
-    return tokenizer, model
+
 
 spark = SparkSession.builder \
     .appName("Museh PySpark Learning") \
@@ -26,6 +22,8 @@ try:
     print('Data loaded successfully')
 except Exception as e:
     print(f'Error loading data: {e}')
+
+
 
 total_users, average_listening_time, total_duration_sum = angelmethod.calculate_kpis(df=df_listen)
 
@@ -162,19 +160,19 @@ st.plotly_chart(line_fig)
 
 
 
+# Load model after Spark and data prep
+tokenizer, model = load_flan_model()
 
-# Generate summary
+    # Generate summary prompt
 if not filtered_b.empty:
-    prompt_text = dataframe_to_prompt(filtered_b)
-
-    tokenizer, model = load_flan_model()
-
-    with st.spinner("Generating summary..."):
+        prompt_text = dataframe_to_prompt(filtered_b)
+        
+        # Tokenize and generate summary
         inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
-        outputs = model.generate(**inputs, max_length=500)
+        outputs = model.generate(**inputs, max_length=300, min_length=150, num_beams=4, early_stopping=True)
         summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-    st.subheader("🧠 AI-Generated Summary")
-    st.write(summary)
+        st.subheader("AI-Generated Summary")
+        st.write(summary)
 else:
-    st.info("No listening data available to summarize.")
+        st.info("No data available to summarize for selected filters.")

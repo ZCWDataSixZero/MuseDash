@@ -9,6 +9,13 @@ from transformers import T5Tokenizer, T5ForConditionalGeneration
 import torch
 
 
+#load the model
+@st.cache_resource
+def load_flan_model():
+    tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-large")
+    model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-large")
+    return tokenizer, model
+
 def calculate_kpis(df: pyspark.sql.dataframe.DataFrame):
     """
     Calculates total users and average listening time from a PySpark DataFrame.
@@ -163,9 +170,11 @@ def dataframe_to_prompt(df):
 
     prompt = f"""
 You are an AI data analyst. You are given a table of monthly listening stats. Write a **natural language summary** that includes:
-- 📊 Total listening duration across all months
-- 📅 The month with the highest listening time
-- 🆓 Differences between free and paid subscriptions (if visible)
+- Most popular month of free and paid users. 
+- Give me the Average total_duration of paid users.
+- The least popular month of paid users.
+- The total number of paid users.
+
 
 Avoid just listing column names. Write a brief narrative like you'd present in a meeting.
 
