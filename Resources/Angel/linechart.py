@@ -172,8 +172,10 @@ try:
             outputs = model.generate(**inputs, max_length=200, min_length=150, do_sample=True, top_p=0.95, top_k=50, early_stopping=True)
             summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-            st.subheader("AI-Generated Summary")
+            
             st.write(summary)
+            st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
+
     else:
             st.info("No data available to summarize for selected filters.")
 except Exception as e:
