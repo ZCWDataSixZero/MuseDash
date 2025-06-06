@@ -281,6 +281,47 @@ def fix_multiple_encoding(text):
         pass
     return original_text
 
+####
+# AI testing
+####
+import requests
+
+def generate_genre_summary(artists: list[str], auth_token: str) -> str:
+    prompt = f"""You are a music genre analyst. Analyze the following list of top 10 artists and generate a 2–3 sentence description that summarizes their dominant musical styles and how they might appeal to listeners. The artists are: {', '.join(artists)}."""
+
+    headers = {
+        "Authorization": f"Bearer {auth_token}",
+        "Content-Type": "application/json"
+    }
+
+    json_data = {
+        # Use the OpenRouter model name for the free DeepSeek-R1 model
+        "model": "deepseek/deepseek-r1:free",
+        "messages": [
+            {"role": "system", "content": "You are a helpful music genre analyst."},
+            {"role": "user", "content": prompt}
+        ]
+    }
+
+    try:
+        # **Crucial Change: Use OpenRouter's API endpoint**
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions", # Changed endpoint!
+            headers=headers,
+            json=json_data
+        )
+        response.raise_for_status() # This will raise an HTTPError for 4xx/5xx responses
+        return response.json()['choices'][0]['message']['content'].strip()
+    except requests.exceptions.RequestException as e: # Catch specific request exceptions
+        # More descriptive error handling for API issues
+        if response is not None:
+            return f"Failed to generate genre summary (HTTP {response.status_code}): {response.text} - {str(e)}"
+        else:
+            return f"Failed to generate genre summary: {str(e)}"
+    except Exception as e:
+        # Catch any other unexpected errors
+        return f"An unexpected error occurred: {str(e)}"
+
 ############
 # Isiah
 ############

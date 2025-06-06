@@ -158,6 +158,25 @@ with tab2:
                         st.session_state.option = selected_artist
                         st.rerun()
             
+            # Generate AI genre statement for the current top 10 artists
+            with st.container(border=True):
+                st.subheader("Genre Summary of Top 10 Artists")
+
+                top_10_artist_names = top_10['Artist'].tolist()
+
+                # Call AI once per session/location combo
+                if "genre_summary" not in st.session_state or st.session_state.get("genre_state") != st.session_state.location:
+                    st.session_state.genre_summary = engine.generate_genre_summary(
+                        artists=top_10_artist_names,
+                        auth_token="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"
+                    )
+                    st.session_state.genre_state = st.session_state.location
+
+                st.text_area(
+                    label="AI-Generated Genre Summary",
+                    value=st.session_state.genre_summary,
+                    height=150
+                )
         
             with st.container():
                 # KPI metrics
