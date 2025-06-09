@@ -7,6 +7,7 @@ import altair as alt
 import requests
 import tempfile
 import time
+from apikey import data_location
 
 
 
@@ -21,7 +22,7 @@ def get_spark_session():
 
 @st.cache_resource
 def load_data():
-    return spark.read.json('/Users/angel/Downloads/spring25data/app/listen_events')
+    return spark.read.json(data_location)
 
 @st.cache_resource
 def get_clean_data():
@@ -37,7 +38,6 @@ def get_top_artists_by_state(_df, state):
 
 @st.cache_resource
 def get_map_data(_df, artist):
-    #artist_df = e.get_artist_state_listen(df=_df, artist=artist)
     return engine.get_artist_state(df=_df,artist=artist)
 
 @st.cache_data
@@ -59,6 +59,14 @@ def top_free(_df, state):
 @st.cache_data
 def create_pie(_df, state):
     return engine.create_subscription_pie_chart(df=_df, state=state)
+
+@st.cache_data
+def top_50_list(_df, state):
+    return engine.get_top_50(df=_df, state=state)
+
+@st.cache_data
+def gen_ai_summary(artist_list):
+    return engine.gen_genre_ai(artist_list=artist_list)
 
 ### ------------------ INITIAL STATE ------------------
 
@@ -229,13 +237,25 @@ with tab2:
                 st.plotly_chart(line_fig)
                 
         with col_table[1]:
+            # render map
             with st.container(border=True):
                 st.subheader(f"Number of {st.session_state.option} Listens")
                 render_map(st.session_state.option)
+
+            # generate genre summary
+            with st.container(border=True):
+                summary_text = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
+                st.subheader(f'Most Popular Genre in {summary_text}')
+
+                top_50 = top_50_list(clean_listen, st.session_state.location)
+                summary = gen_ai_summary(top_50)
+
+                st.text_area(
+                    label= "AI-Generated Genre Summary",
+                    value = summary
+                )
         
         
-                # state_text = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
-                # st.header(f"Top 10 Artists in {state_text}")
             col_free, col_paid, col_line = st.columns(3)
             with col_paid:
                 with st.container(border=True):
