@@ -48,7 +48,6 @@ def get_top_artists_by_state(_df, state):
 
 @st.cache_resource
 def get_map_data(_df, artist):
-    #artist_df = e.get_artist_state_listen(df=_df, artist=artist)
     return engine.get_artist_state(df=_df,artist=artist)
 
 @st.cache_data
@@ -70,6 +69,14 @@ def top_free(_df, state):
 @st.cache_data
 def create_pie(_df, state):
     return engine.create_subscription_pie_chart(df=_df, state=state)
+
+@st.cache_data
+def top_50_list(_df, state):
+    return engine.get_top_50(df=_df, state=state)
+
+@st.cache_data
+def gen_ai_summary(artist_list):
+    return engine.gen_genre_ai(artist_list=artist_list)
 
 ### ------------------ INITIAL STATE ------------------
 
@@ -128,6 +135,7 @@ with tab1:
     with col2:
         st.image('MuseDash_Pipeline.png', caption='Pipeline')
 
+
 ### ------------------ MAIN UI: TAB 2 ------------------
 with tab2:
     # setting dashboard column layout
@@ -158,25 +166,6 @@ with tab2:
                         st.session_state.option = selected_artist
                         st.rerun()
             
-            # Generate AI genre statement for the current top 10 artists
-            with st.container(border=True):
-                st.subheader("Genre Summary of Top 10 Artists")
-
-                top_10_artist_names = top_10['Artist'].tolist()
-
-                # Call AI once per session/location combo
-                if "genre_summary" not in st.session_state or st.session_state.get("genre_state") != st.session_state.location:
-                    st.session_state.genre_summary = engine.generate_genre_summary(
-                        artists=top_10_artist_names,
-                        auth_token="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"
-                    )
-                    st.session_state.genre_state = st.session_state.location
-
-                st.text_area(
-                    label="AI-Generated Genre Summary",
-                    value=st.session_state.genre_summary,
-                    height=150
-                )
         
             with st.container():
                 # KPI metrics
@@ -190,7 +179,7 @@ with tab2:
                         st.metric("Average Total Listening", f"{round(kpi_data[1]/60)} MIN")
                 with col3:
                     with st.container(border=True):
-                        st.metric("Total Paid Listening", f"{round(kpi_data[2]/3600000)} HR")
+                        st.metric("Total Paid Listening", f"{round(kpi_data[2]/3600000)}k+ H")
             
             with st.container(border=True):
                 # listen graph creation
@@ -206,6 +195,8 @@ with tab2:
                     title= f'How long are users listening in {chart_state}',
                     labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
                         )
+                
+                
                 line_fig.update_layout(
                     hovermode="x unified",
 
@@ -240,16 +231,41 @@ with tab2:
         
                 )
 
+
+                 #change color of the lines
+                line_fig.update_traces(
+                selector={'name': 'paid'},
+                line=dict(color='orange', width=4),
+                name='Paid'
+                )
+                line_fig.update_traces(
+                selector={'name': 'free'},
+                line=dict(color='red', width=4),
+                name='Free'
+                )
+
                 st.plotly_chart(line_fig)
                 
         with col_table[1]:
+            # render map
             with st.container(border=True):
                 st.subheader(f"Number of {st.session_state.option} Listens")
                 render_map(st.session_state.option)
+
+            # generate genre summary
+            with st.container(border=True):
+                summary_text = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
+                st.subheader(f'Most Popular Genre in {summary_text}')
+
+                top_50 = top_50_list(clean_listen, st.session_state.location)
+                summary = gen_ai_summary(top_50)
+
+                st.text_area(
+                    label= "AI-Generated Genre Summary",
+                    value = summary
+                )
         
         
-                # state_text = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
-                # st.header(f"Top 10 Artists in {state_text}")
             col_free, col_paid, col_line = st.columns(3)
             with col_paid:
                 with st.container(border=True):

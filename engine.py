@@ -2,7 +2,9 @@ import pandas as pd
 import pyspark
 from pyspark.sql.functions import desc, asc, avg, count, col, when, to_timestamp, year, month, date_format, sum, when, udf, from_unixtime
 from pyspark.sql.types import StringType
-
+import requests
+import json
+from apikey import API_KEY
 
 ############
 # Kunle
@@ -102,6 +104,65 @@ def map_prep_df(df: pyspark.sql.dataframe.DataFrame) -> pd.core.frame.DataFrame:
 def top_5(df: pyspark.sql.dataframe.DataFrame) ->  pyspark.sql.dataframe.DataFrame:
     df = df.orderBy(desc('listens')).limit(5)
     return df
+
+
+def get_top_50(df: pyspark.sql.dataframe.DataFrame , state: str) -> list:
+    """
+    Finds the top 50 artists, ordered by play count.
+
+    Args:
+        dataframe: An optional PySpark DataFrame. Defaults to the globally defined df_listen.
+        selected_state: An optional string representing the state to filter by.
+                        If None (default), it aggregates across all states.
+
+    Returns:
+        A PySpark DataFrame containing the top 10 artists and their counts.
+    """
+
+    if state == 'Nationwide':
+        filtered_df = df
+    else:
+        #title = f"Top 10 Artists in {selected_state}"
+        filtered_df = df.filter(col("state") == state)
+    
+        
+
+    top_50_artists_df = filtered_df.groupBy("artist") \
+                                   .agg(count("*").alias("Total Streams")) \
+                                   .orderBy(desc("Total Streams")) \
+                                   .limit(50) 
+    
+    top_50_artists_df = top_50_artists_df.toPandas().sort_values(by='Total Streams', ascending=False)
+
+    
+    return top_50_artists_df.artist.tolist()
+
+def gen_genre_ai(artist_list: list) -> str:
+    try:
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": API_KEY,
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "google/gemma-3n-e4b-it:free",
+            "prompt": f'Given this list of artists {artist_list}, could you tell me the 3 most popular genre of music in 30 words or less',
+            "max_tokens": 2000
+        }
+    except requests.exceptions.RequestException as e: # Catch specific request exceptions
+        # More descriptive error handling for API issues
+        if response is not None:
+            return f"Failed to generate genre summary (HTTP {response.status_code}): {response.text} - {str(e)}"
+        else:
+            return f"Failed to generate genre summary: {str(e)}"
+    except Exception as e:
+        # Catch any other unexpected errors
+        return f"An unexpected error occurred: {str(e)}"
+
+    response = requests.post(url, headers=headers, json=data)
+    rrr = response.json()
+
+    return rrr['choices'][0]['text']
 
 
 
