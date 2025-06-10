@@ -140,31 +140,36 @@ def get_top_50(df: pyspark.sql.dataframe.DataFrame , state: str) -> list:
     return top_50_artists_df.artist.tolist()
 
 def gen_genre_ai(artist_list: list) -> str:
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f'Bearer {API_KEY}',
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "google/gemma-3n-e4b-it:free",
+        "messages": [
+            {
+                "role": "user",
+                "content": f"Given this list of artists {artist_list}, could you tell me the 3 most popular genres of music in 30 words or less?"
+            }
+        ],
+        "max_tokens": 2000
+    }
+
     try:
-        url = "https://openrouter.ai/api/v1/chat/completions"
-        headers = {
-            "Authorization": API_KEY,
-            "Content-Type": "application/json"
-        }
-        data = {
-            "model": "google/gemma-3n-e4b-it:free",
-            "prompt": f'Given this list of artists {artist_list}, could you tell me the 3 most popular genre of music in 30 words or less',
-            "max_tokens": 2000
-        }
-    except requests.exceptions.RequestException as e: # Catch specific request exceptions
-        # More descriptive error handling for API issues
-        if response is not None:
-            return f"Failed to generate genre summary (HTTP {response.status_code}): {response.text} - {str(e)}"
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()  # Raises HTTPError for bad responses (4xx or 5xx)
+
+        rrr = response.json()
+        if "choices" in rrr and len(rrr["choices"]) > 0:
+            return rrr["choices"][0].get("message", {}).get("content", "No content found.")
         else:
-            return f"Failed to generate genre summary: {str(e)}"
+            return f"Unexpected response format: {rrr}"
+
+    except requests.exceptions.RequestException as e:
+        return f"Request error: {str(e)}"
     except Exception as e:
-        # Catch any other unexpected errors
-        return f"An unexpected error occurred: {str(e)}"
-
-    response = requests.post(url, headers=headers, json=data)
-    rrr = response.json()
-
-    return rrr['choices'][0]['text']
+        return f"Unexpected error: {str(e)}"
 
 
 
