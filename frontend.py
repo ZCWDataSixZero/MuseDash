@@ -7,7 +7,8 @@ import altair as alt
 import requests
 import tempfile
 import time
-
+from transformers import T5Tokenizer, T5ForConditionalGeneration, TapasTokenizer, TapasForQuestionAnswering, AutoTokenizer, AutoModelForSeq2SeqLM
+import torch
 
 
 
@@ -59,6 +60,13 @@ def top_free(_df, state):
 @st.cache_data
 def create_pie(_df, state):
     return engine.create_subscription_pie_chart(df=_df, state=state)
+
+#load t5-small model
+@st.cache_resource
+def load_flan_model():
+    tokenizer = T5Tokenizer.from_pretrained("t5-small")
+    model = T5ForConditionalGeneration.from_pretrained("t5-small")
+    return tokenizer, model
 
 ### ------------------ INITIAL STATE ------------------
 
@@ -167,66 +175,145 @@ with tab2:
                 # listen graph creation
                 listen_duration = user_list(_df=clean_listen, state=st.session_state.location)
                 chart_state = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
+
+                #define order of months
+                month_order_list = [
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+                ]
+
+                #dict comprehension to create a dictionary for month mapping
+                month_mapping = {month: i + 1 for i, month in enumerate(month_order_list)}
+                
+                # Create a new column 'month_number' giving each month a number in the dataframe
+                listen_duration['month_number'] = listen_duration['month_name'].map(month_mapping)
+
+                #sort dataframe by month_number
+                listen_duration = listen_duration.sort_values(by='month_number').reset_index(drop=True)
+               
+                # Filter the DataFrame based on the selected month range
+                month_slider = st.slider(
+                    label="Select a range of months",
+                    min_value=1,
+                    max_value=12,
+                    value=(1, 12),  
+                    format="%i",  # display as integer
+                    label_visibility="visible",
+                    help="Add or remove months to filter listening data",
+                )
+
+                # grab selected month numbers
+                start_month, end_month = month_slider
+                filtered_duration = listen_duration[
+                    (listen_duration['month_number'] >= start_month) &
+                    (listen_duration['month_number'] <= end_month)
+                ].copy()
+
+                if filtered_duration.empty:
+                    st.warning("No data available for the selected month range.")
+                else:
                     
-                #create the line graph
-                line_fig = px.line(
-                    listen_duration,
-                    x="month_name",
-                    y="total_duration",
-                    color="subscription",
-                    title= f'How long are users listening in {chart_state}',
-                    labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
+                    #create the line graph
+                    line_fig = px.line(
+                        filtered_duration,
+                        x="month_name",
+                        y="total_duration",
+                        color="subscription",
+                        title= f'How long are users listening in {chart_state}',
+                        labels={"month_name": "Month", "total_duration": "Total Duration (seconds)"}
+                            )
+                    #ensure the x-axis is sorted by month
+                    line_fig.update_xaxes(categoryorder="array",
+                                          categoryarray=month_order_list)
+                    
+                    line_fig.update_layout(
+                        hovermode="x unified",
+
+                        #style the hover line color
+                        xaxis=dict(
+                            showspikes=True,
+                            spikemode='across',
+                            spikesnap='cursor',
+                            spikethickness=1,
+                            spikecolor="lightgray"
+                        ),
+                        yaxis=dict(
+                            showspikes=False, #turns off horizontal line
+
                         )
-                
-                
-                line_fig.update_layout(
-                    hovermode="x unified",
+                                            )
 
-                    #style the hover line color
-                    xaxis=dict(
-                        showspikes=True,
-                        spikemode='across',
-                        spikesnap='cursor',
-                        spikethickness=1,
-                        spikecolor="lightgray"
-                    ),
-                    yaxis=dict(
-                        showspikes=False, #turns off horizontal line
+                    # Update hovertemplate for the 'Paid' trace
+                    line_fig.update_traces(
+                        selector={'name': 'paid'},
+                        hovertemplate='<span style="font-size: 18px;">' +
+                                    'Paid: %{y:.2f}' +
+                                    '<extra></extra>'
+                        )
 
+                    # Update hovertemplate for the 'Free' trace
+                    line_fig.update_traces(
+                        selector={'name': 'free'},
+                        hovertemplate='<span style="font-size: 18px;">' +
+                                    'Free: %{y:.2f}' +
+                                    '<extra></extra>',
+            
                     )
-                                        )
-
-                # Update hovertemplate for the 'Paid' trace
-                line_fig.update_traces(
+                    
+                    #change color of the lines
+                    line_fig.update_traces(
                     selector={'name': 'paid'},
-                    hovertemplate='<span style="font-size: 18px;">' +
-                                'Paid: %{y:.2f}' +
-                                '<extra></extra>'
+                    line=dict(color='orange', width=4),
+                    name='Paid'
+                    )
+                    line_fig.update_traces(
+                    selector={'name': 'free'},
+                    line=dict(color='red', width=4),
+                    name='Free'
                     )
 
-                # Update hovertemplate for the 'Free' trace
-                line_fig.update_traces(
-                    selector={'name': 'free'},
-                    hovertemplate='<span style="font-size: 18px;">' +
-                                'Free: %{y:.2f}' +
-                                '<extra></extra>',
+                    st.plotly_chart(line_fig, use_container_width=True)
+
+                try:
+                # Load model after Spark and data prep
+                    tokenizer, model = load_flan_model()
+
+                    prompt_text = engine.build_prompt_from_dataframe(listen_duration)
+
+                    # Generate summary prompt
+                    if not listen_duration.empty:
+                        prompt_text = engine.build_prompt_from_dataframe(listen_duration)
+                        with st.spinner("Generating summary..."):   
+                            # Tokenize and generate summary
+                            inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=512)
+                            outputs = model.generate(**inputs, max_length=50, min_length=20, do_sample=True, top_p=0.95, top_k=50)
+                            summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+                            
+                            def capitalize_sentences(text):
+                                sentences = text.split('. ')
+                                capitalized_sentences = []
+                                for sentence in sentences:
+                                    words = sentence.split()
+                                    capitalized_words = [word.capitalize() if word.islower() else word for word in words]
+                                    capitalized_sentence = ' '.join(capitalized_words)
+                                    capitalized_sentences.append(capitalized_sentence)
+                                return '. '.join(capitalized_sentences)
+                                
+                            summary = capitalize_sentences(summary)
+
+                            st.write(summary)
+                            st.markdown("<p style='font-size: 0.85em; color: gray;'>AI-generated summary</p>", unsafe_allow_html=True)
+
+                    else:
+                            st.info("No data available to summarize for selected filters.")
+                except Exception as e:
+                    st.error(f"Error loading model or generating summary: {e}")
+                    st.write("Please check your model and data.")
+                    
         
-                )
+            
 
-
-                 #change color of the lines
-                line_fig.update_traces(
-                selector={'name': 'paid'},
-                line=dict(color='orange', width=4),
-                name='Paid'
-                )
-                line_fig.update_traces(
-                selector={'name': 'free'},
-                line=dict(color='red', width=4),
-                name='Free'
-                )
-
-                st.plotly_chart(line_fig)
                 
         with col_table[1]:
             with st.container(border=True):

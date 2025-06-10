@@ -2,7 +2,8 @@ import pandas as pd
 import pyspark
 from pyspark.sql.functions import desc, asc, avg, count, col, when, to_timestamp, year, month, date_format, sum, when, udf, from_unixtime
 from pyspark.sql.types import StringType
-
+from transformers import T5Tokenizer, T5ForConditionalGeneration
+import torch
 
 ############
 # Kunle
@@ -347,3 +348,48 @@ def top_paid_songs(df: pyspark.sql.DataFrame, state: str) -> pd.core.frame.DataF
     return top_songs_pd
 
 
+
+
+
+
+
+
+                # ---- AI Summary Propmpts -----
+
+##Angel##
+def build_prompt_from_dataframe(df):
+    """
+
+    Builds a prompt for summarization from the provided DataFrame.
+
+    """
+    if df.empty:
+        return "No listening data is available for the selected filters."
+
+    df["total_duration"] = pd.to_numeric(df["total_duration"], errors="coerce")
+
+    total_minutes = df["total_duration"].sum()
+    avg_per_month = df.groupby("month_name")["total_duration"].sum().mean()
+
+    monthly_totals = df.groupby("month_name")["total_duration"].sum()
+    peak_month = monthly_totals.idxmax()
+    peak_value = monthly_totals.max()
+    low_month = monthly_totals.idxmin()
+    low_value = monthly_totals.min()
+
+    peak_breakdown = df[df["month_name"] == peak_month].groupby("subscription")["total_duration"].sum().to_dict()
+    peak_breakdown_str = ", ".join(f"{k}: {v:.0f}" for k, v in peak_breakdown.items())
+
+    # Compose the data summary as plain text (no instructions embedded inside)
+    data_summary = (
+        f"Total listening time is {total_minutes:.0f} minutes. "
+        f"Average monthly listening is {avg_per_month:.0f} minutes. "
+        f"The peak month is {peak_month} with {peak_value:.0f} minutes. "
+        f"The lowest month is {low_month} with {low_value:.0f} minutes. "
+        f"In the peak month, listening breakdown is: {peak_breakdown_str}."
+    )
+
+    # Add the t5 prefix for summarization task
+    prompt = "summarize: " + data_summary
+
+    return prompt

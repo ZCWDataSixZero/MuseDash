@@ -124,21 +124,6 @@ line_fig.update_traces(
                   '<extra></extra>',
   
 )
-# if not filtered_b.empty:
-#     summary_input_text = ""
-#     for index, row in filtered_b.iterrows():
-#         summary_input_text += f"{row['month_name']}: Total duration was {row['total_duration']:.2f} seconds for {row['subscription']} users. "
-#     if summary_input_text:
-#         st.subheader("AI Summarization of Listening Data")
-#         try:
-#             summary_output = summarizer(summary_input_text, max_length=40, min_length=23, do_sample=False)[0]['summary_text']
-#             st.write(summary_output)
-#         except Exception as e:
-#             st.write(f"Error generating summary: {e}")
-#     else:
-#         st.write("No data available for the selected months.")
-# else:
-#     st.info("Please select a valid month range.")
 st.plotly_chart(line_fig)
 
 # Summarization
