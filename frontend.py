@@ -1,10 +1,10 @@
-import streamlit as st
+import streamlit as st # type: ignore
 import numpy as np
-import plotly.express as px
+import plotly.express as px # type: ignore
 import engine
-import plotly.graph_objects as go
-import altair as alt
-import requests
+import plotly.graph_objects as go # type: ignore
+import altair as alt # type: ignore
+import requests # type: ignore
 import tempfile
 import time
 
@@ -15,7 +15,7 @@ from pyspark.sql import SparkSession
 
 @st.cache_resource
 def get_spark_session():
-    return SparkSession.builder.appName("Museh PySpark Learning").getOrCreate()
+    return SparkSession.builder.appName("MuseDash PySpark").getOrCreate()
 
 @st.cache_resource
 def load_data():
