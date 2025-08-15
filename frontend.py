@@ -133,7 +133,7 @@ with tab1:
     # Center the image using columns
     col1, col2, col3 = st.columns([1, 8, 1])
     with col2:
-        st.image('MuseDash_Pipeline.png', caption='Pipeline')
+        st.image('./images/MuseDash_Pipeline.png', caption='Pipeline')
 
 
 ### ------------------ MAIN UI: TAB 2 ------------------
@@ -355,4 +355,4 @@ with tab3:
     # Center the image using columns
     col1, col2, col3 = st.columns([1, 5, 1])
     with col2:
-        st.image('MuseDash_QR.png', caption='Repo')
+        st.image('./images/MuseDash_QR.png', caption='Repo')

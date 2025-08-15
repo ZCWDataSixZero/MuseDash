@@ -19,7 +19,7 @@ This project was developed collaboratively as a portfolio piece to demonstrate *
 
 ## Our Solution
 
-![Screenshot](/App_Screenshot.png)
+![Screenshot](/images/App_Screenshot.png)
 
 ---
 
@@ -52,7 +52,7 @@ Our pipeline processes millions of rows of listening data efficiently, using a c
 5. **Dashboard Deployment:** **Streamlit** app providing filtering, search, and drill-down capabilities.  
 
 📌 **Pipeline Diagram:**  
-![Pipeline](/MuseDash_Pipeline.png)  
+![Pipeline](/images/MuseDash_Pipeline.png)  
 
 ---
 
