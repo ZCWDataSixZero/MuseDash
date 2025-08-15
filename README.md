@@ -19,7 +19,7 @@ This project was developed collaboratively as a portfolio piece to demonstrate *
 
 ## Our Solution
 
-![Screenshot](/App Screenshot.png)
+![Screenshot](/App_Screenshot.png)
 
 ---
 
