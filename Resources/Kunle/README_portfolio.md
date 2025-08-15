@@ -44,7 +44,7 @@ Our pipeline processes millions of rows of listening data efficiently, using a c
 5. **Dashboard Deployment:** Streamlit app providing filtering, search, and drill-down capabilities.  
 
 📌 **Pipeline Diagram:**  
-![Pipeline](https://github.com/user-attachments/assets/73902ea0-59af-41b0-823e-82004129f6dd)  
+![Pipeline]('MuseDash_Pipeline.png')  
 
 ---
 
