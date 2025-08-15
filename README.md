@@ -1,3 +1,5 @@
+
+
 # 🎵 MuseDash — Music Streaming Analytics Dashboard  
 
 ## 📌 Overview  
@@ -12,6 +14,12 @@ This project was developed collaboratively as a portfolio piece to demonstrate *
 - **Isiah Armstrong**  — [LinkedIn](https://www.linkedin.com/in/isiaharmstrong00/) 
 - **James Heller**  — [LinkedIn](https://www.linkedin.com/in/james-heller-xiii/) 
 - **Kunle Adeyanju**  — [LinkedIn](https://www.linkedin.com/in/kunleadeyanju/) 
+
+---
+
+## Our Solution
+
+![Screenshot](/images/App_Screenshot.png)
 
 ---
 
@@ -44,7 +52,7 @@ Our pipeline processes millions of rows of listening data efficiently, using a c
 5. **Dashboard Deployment:** **Streamlit** app providing filtering, search, and drill-down capabilities.  
 
 📌 **Pipeline Diagram:**  
-![Pipeline](/MuseDash_Pipeline.png)  
+![Pipeline](/images/MuseDash_Pipeline.png)  
 
 ---
 
