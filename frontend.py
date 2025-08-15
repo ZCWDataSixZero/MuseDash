@@ -182,6 +182,7 @@ with tab2:
             
             with st.container(border=True):
                 # listen graph creation
+
                 listen_duration = user_list(_df=clean_listen, state=st.session_state.location)
                 chart_state = st.session_state.location if st.session_state.location != "Nationwide" else "the Nation"
 
