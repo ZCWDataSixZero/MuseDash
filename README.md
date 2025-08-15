@@ -23,7 +23,7 @@ Regional differences, popularities, and other metrics; show it to us by? artist?
 
 ### * Our Pipeline
 
-![image]('MuseDash_Pipeline.png')
+![image](/MuseDash_Pipeline.png)
 
 * AWS
 * PySpark
