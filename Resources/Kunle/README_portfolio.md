@@ -8,7 +8,7 @@ This project was developed collaboratively as a portfolio piece to demonstrate *
 ---
 
 ## 👩‍💻 The Team  
-- **Angelika Brown** — [LinkedIn](https://www.linkedin.com/in/angelikabrown/)  
+- **Angelika Brown** — [LinkedIn](https://www.linkedin.com/in/angelikabrown/) 
 - **Isiah Armstrong**  — [LinkedIn](https://www.linkedin.com/in/isiaharmstrong00/) 
 - **James Heller**  — [LinkedIn](https://www.linkedin.com/in/james-heller-xiii/) 
 - **Kunle Adeyanju**  — [LinkedIn](https://www.linkedin.com/in/kunleadeyanju/) 
@@ -19,7 +19,7 @@ This project was developed collaboratively as a portfolio piece to demonstrate *
 
 | Layer | Tools & Technologies |
 |-------|----------------------|
-| **Data Ingestion & Storage** | **AWS S3** (data storage), **AWS IAM** (security & permissions) |
+| **Data Ingestion & Storage** | **AWS S3** (data storage)|
 | **Data Processing** | **PySpark** (distributed processing), **Pandas** (data wrangling) |
 | **Visualization** | **Altair**, **Plotly** |
 | **Application Layer** | **Streamlit** (interactive dashboard) |
@@ -32,16 +32,16 @@ This project was developed collaboratively as a portfolio piece to demonstrate *
 Our pipeline processes millions of rows of listening data efficiently, using a combination of **cloud storage, distributed computing, and interactive front-end visualization**.  
 
 **Workflow:**  
-1. **Data Storage:** Raw CSV files stored in AWS S3.  
-2. **Data Processing:**  
-   - Loaded into **PySpark** for distributed transformation & aggregation.  
-   - Enriched and cleaned using **Pandas** for targeted manipulations.  
+1. **Data Storage:** Raw Data files stored in AWS S3.  
+2. **Data Processing & Enrichment:**   Data is loaded into **PySpark** where it is cleaned, filtered, and transformed at Scale
+   - For visulaizion, the processed data is converted into **Pandas** DataFrames
+   - We call AI APIs to supplement and enrich the data, such as generating music genre information for artis, which was not avaliable in the source dataset.
 3. **Analytics:** Generated metrics such as:  
    - Most streamed artists/songs by region  
    - Genre popularity trends over time  
    - Listening activity heatmaps  
 4. **Visualization:** Interactive charts and maps using **Altair** & **Plotly**.  
-5. **Dashboard Deployment:** Streamlit app providing filtering, search, and drill-down capabilities.  
+5. **Dashboard Deployment:** **Streamlit** app providing filtering, search, and drill-down capabilities.  
 
 📌 **Pipeline Diagram:**  
 ![Pipeline](/MuseDash_Pipeline.png)  
